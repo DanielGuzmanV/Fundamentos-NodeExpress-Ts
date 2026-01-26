@@ -1,5 +1,6 @@
 import express, { type Request, type Response} from 'express';
 import dotenv from 'dotenv';
+import categoriaRoutes from './routes/categoria.routes.js'
 
 dotenv.config();
 
@@ -7,6 +8,9 @@ const app = express();
 const PORT = Number(process.env.PORT) || 3000;
 
 app.use(express.json());
+
+// Registro de las rutas
+app.use('/categorias', categoriaRoutes);
 
 app.get('/', (req: Request, res: Response) => {
   res.send('Servidor con Typescript funcionando');
