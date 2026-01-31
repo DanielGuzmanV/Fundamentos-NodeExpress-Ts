@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import ProductoModel from "../models/producto.model.js";
 import { Producto } from "../types/index.js";
+import { error } from "node:console";
 
 export const obtenerProductos = (req: Request, res: Response, next: NextFunction) => {
   ProductoModel.getAll((err, rows) => {
@@ -16,6 +17,28 @@ export const obtenerProductos = (req: Request, res: Response, next: NextFunction
     })
   })
 };
+
+export const productoID = (req: Request, res: Response, next: NextFunction) => {
+  const {id} = req.params;
+  const idNumerico = Number(id);
+
+  if(isNaN(idNumerico)) {
+    return res.status(400).json({ error: 'El ID proporcionado no es un numero valido'})
+  }
+
+  ProductoModel.getById(idNumerico, (err, rows) => {
+    if(err) return next(err);
+
+    if(!rows) {
+      return res.status(404).json({ mensaje: "Producto no encontrado"});
+    }
+
+    res.status(200).json({
+      mensaje: "Producto encontrado",
+      datos: rows
+    })
+  })
+}
 
 export const crearProducto = (req: Request, res: Response, next: NextFunction) => {
   const datosProducto: Producto = req.body;
