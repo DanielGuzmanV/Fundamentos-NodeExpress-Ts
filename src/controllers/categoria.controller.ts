@@ -1,30 +1,40 @@
-import { Request, Response } from "express";
+import { Request, Response, NextFunction } from "express";
 import CategoriaModel from "../models/categoria.model.js";
 
-export const obtenerCategorias = (req: Request, res: Response) => {
-  CategoriaModel.getAll((err, filas) => {
-    if(err) return res.status(500).json({ error: err.message});
+// Consulta 1: obtener todas las categorias
+export const obtenerCategorias = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const rows = await CategoriaModel.getAll();
+    const mensaje = rows.length > 0 
+      ? "Las categorias son:" : "No hay ninguna categoria creada"
+    
     res.json({
-      mensaje: "Las categorias son:",
-      categorias: filas
+      mensaje: mensaje,
+      cantidad_Cat: rows.length,
+      datos: rows
     });
-  });
+
+  } catch (err) {
+    next(err)
+  }
 };
 
-export const crearCategoria = (req: Request, res: Response) => {
-  const {nombre} = req.body;
-  if(!nombre) return res.status(400).json({ error: "El nombre es obligatorio"});
+// Consulta 2: Crear una nueva categoria
+export const crearCategoria = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const {nombre} = req.body;
+    if(!nombre) return res.status(400).json({ error: "El nombre es obligatorio"});
+    
+    await CategoriaModel.create(nombre);
 
-  CategoriaModel.create(nombre, (err) => {
-    if(err) return res.status(400).json({error: "Error al crear o categoria duplicada"});
-    res.status(201).json({ mensaje: "Categoria creada con exito"})
-  })
+    res.status(201).json({ 
+      mensaje: "Categoria creada con exito",
+      categoria: nombre,
+    })
+  } catch (err: any) {
+    if(err.message.includes("UNIQUE")) {
+      return res.status(400).json({ error: "Error al crear o categoria duplicada"});
+    }
+    next(err);
+  }
 }
-
-
-
-
-
-
-
-
