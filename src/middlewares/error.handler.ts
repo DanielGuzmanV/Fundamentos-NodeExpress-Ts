@@ -1,12 +1,15 @@
-import { Response } from "express";
+import { Response, Request, NextFunction } from "express";
 
-export const errorHandler = (err: any, res: Response) => {
+export const errorHandler = (err: any, req: Request, res: Response, next: NextFunction) => {
   console.error("--- ERROR DETECTADO---");
   console.error(err.stack);
 
-  res.status(err.status || 500).json({
-    error: "Ocurrio un error en el servidor",
-    mensaje: err.mensaje || "Error interno"
+  const status = err.status || 500;
+  const message = err.menssage || "Error interno del servidor";
+
+  res.status(status).json({
+    error: true,
+    mensaje: message
   })
 }
 
