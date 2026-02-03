@@ -22,7 +22,11 @@ db.serialize(() => {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         nombre TEXT NOT NULL UNIQUE
       )
-    `);
+    `, (err) => {
+      if(err) console.error("Error al crear la tabla categorias:", err.message);
+      else console.log("Tabla 'Categoria' lista");
+    }
+  );
   
   db.run(`
       CREATE TABLE IF NOT EXISTS productos (
@@ -31,9 +35,14 @@ db.serialize(() => {
         precio REAL NOT NULL,
         stock INTEGER NOT NULL,
         categoria_id INTEGER,
+        activo INTEGER DEFAULT 1,
         FOREIGN KEY (categoria_id) REFERENCES categorias (id)
       )
-    `);
+    `, (err) => {
+      if(err) console.error("Error al crear la tabla de productos");
+      else console.log("Tabla 'Productos' lista");
+    }
+  );
 });
 
 export default db;
