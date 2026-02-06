@@ -20,7 +20,8 @@ db.serialize(() => {
   db.run(`
       CREATE TABLE IF NOT EXISTS categorias (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        nombre TEXT NOT NULL UNIQUE
+        nombre TEXT NOT NULL UNIQUE,
+        activo INTEGER DEFAULT 1
       )
     `, (err) => {
       if(err) console.error("Error al crear la tabla categorias:", err.message);
