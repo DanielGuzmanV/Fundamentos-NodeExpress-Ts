@@ -14,6 +14,17 @@ const CategoriaModel = {
     });
   },
 
+  getById: (id: number): Promise<Categoria | undefined> => {
+    return new Promise((resolve, reject) => {
+      const sql = "SELECT * FROM categorias WHERE id = ?";
+
+      db.get(sql, [id], (err, row) => {
+        if(err) return reject(err);
+        resolve(row as Categoria | undefined);
+      })
+    })
+  },
+
   // Crear una categoria
   create: (nombre: string): Promise<void> => {
     return new Promise((resolve, reject) => {
@@ -32,11 +43,6 @@ const CategoriaModel = {
 
       db.run(sql, [nuevoNombre, id], function(err) {
         if(err) return reject(err);
-
-        if(this.changes === 0) {
-          return reject(new Error("No se encontro la categoria con ese ID"));
-        };
-
         resolve();
       });
     });
