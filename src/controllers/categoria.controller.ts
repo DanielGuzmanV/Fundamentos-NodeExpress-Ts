@@ -1,15 +1,14 @@
 import { Request, Response, NextFunction } from "express";
 import CategoriaModel from "../models/categoria.model.js";
+import CategoriaService from "../services/categoria.service.js";
 
 // Consulta 1: obtener todas las categorias
 export const obtenerCategorias = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const rows = await CategoriaModel.getAll();
-    const mensaje = rows.length > 0 
-      ? "Las categorias son:" : "No hay ninguna categoria creada"
+    const rows = await CategoriaService.listarCategorias();
     
     res.json({
-      mensaje: mensaje,
+      mensaje: rows.length > 0 ? "Las categorias son:" : "No hay ninguna categoria creada",
       cantidad_Cat: rows.length,
       datos: rows
     });
@@ -23,9 +22,7 @@ export const obtenerCategorias = async (req: Request, res: Response, next: NextF
 export const crearCategoria = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const {nombre} = req.body;
-    if(!nombre) return res.status(400).json({ error: "El nombre es obligatorio"});
-    
-    await CategoriaModel.create(nombre);
+    await CategoriaService.crearNuevaCategoria(nombre)
 
     res.status(201).json({ 
       mensaje: "Categoria creada con exito",
@@ -34,6 +31,9 @@ export const crearCategoria = async (req: Request, res: Response, next: NextFunc
   } catch (err: any) {
     if(err.message.includes("UNIQUE")) {
       return res.status(400).json({ error: "Error al crear o categoria duplicada"});
+    }
+    if(err.message === "NOT_NAME") {
+      return res.status(400).json({error: "El nombre es obligatorio"})
     }
     next(err);
   }
@@ -45,15 +45,23 @@ export const actualizarCategoria = async(req: Request, res: Response, next: Next
     const {id} = req.params;
     const {nombre} = req.body;
 
-    if(!nombre) return res.status(400).json({ error: "El nuevo nombre es obligatorio"});
-    await CategoriaModel.update(Number(id), nombre);
+    await CategoriaService.actualizarCategoria(id, nombre);
 
     res.json({
       mensaje: "Categoria actualizada correctamente",
       nuevo_nombre: nombre,
     })
 
-  } catch (err) {
+  } catch (err: any) {
+    if(err.message === "NOT_FOUND_ID") {
+      return res.status(404).json({error: "ID no valido"})
+    }
+    if(err.message === "NOT_NAME") {
+      return res.status(400).json({error: "El nuevo nombre es obligatorio"})
+    }
+    if(err.message === "CATEGORIA_NOT_FOUND") {
+      return res.status(404).json({error: "No se encontro la categoria con ese ID"})
+    }
     next(err);
   }
 }
