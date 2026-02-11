@@ -14,10 +14,22 @@ const CategoriaModel = {
     });
   },
 
+  // Busqueda por Id y verifica si esta activo
   getById: (id: number): Promise<Categoria | undefined> => {
     return new Promise((resolve, reject) => {
       const sql = "SELECT * FROM categorias WHERE id = ? AND activo = 1";
 
+      db.get(sql, [id], (err, row) => {
+        if(err) return reject(err);
+        resolve(row as Categoria | undefined);
+      })
+    })
+  },
+
+  // Busqueda por Id
+  getByIdSinFiltro: (id: number): Promise<Categoria | undefined> => {
+    return new Promise((resolve, reject) => {
+      const sql = "SELECT * FROM categorias WHERE id = ? AND activo = 0";
       db.get(sql, [id], (err, row) => {
         if(err) return reject(err);
         resolve(row as Categoria | undefined);
@@ -67,7 +79,6 @@ const CategoriaModel = {
 
       db.run(sql, [id], function(err) {
         if(err) return reject(err);
-        if(this.changes === 0) return reject(new Error("La categoria ya esta activa o no existe"));
         resolve();
       })
     })
