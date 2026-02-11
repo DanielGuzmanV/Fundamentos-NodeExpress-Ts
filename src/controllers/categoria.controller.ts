@@ -92,7 +92,7 @@ export const ocultarCategoria = async(req: Request, res: Response, next: NextFun
 export const mostrarCategoria = async(req: Request, res: Response, next: NextFunction) => {
   try {
     const {id} = req.params;
-    await CategoriaModel.activarCategoria(Number(id));
+    await CategoriaService.mostrarCategoriaId(id);
 
     res.json({
       mensaje: "Categoria activada nuevamente",
@@ -100,8 +100,11 @@ export const mostrarCategoria = async(req: Request, res: Response, next: NextFun
     })
 
   } catch (err: any) {
-    if(err.message === "La categoria ya esta activa o no existe") {
-      return res.status(400).json({error: err.message});
+    if(err.message === "NOT_FOUND_ID") {
+      return res.status(404).json({error: "ID no valido"})
+    }
+    if(err.message === "CATEGORIA_NOT_FOUND") {
+      return res.status(400).json({error: "La categoria ya esta activa o no existe"});
     }
     next(err);
   }

@@ -40,6 +40,18 @@ const CategoriaService = {
     if(!categoria) throw new Error("CATEGORIA_NOT_FOUND");
 
     return await CategoriaModel.deleteLogical(idNumerico);
+  },
+
+  // Mostrar una categoria oculta
+  mostrarCategoriaId: async(id: string | string[] | undefined) => {
+    const idNumerico = Number(id);
+    if(isNaN(idNumerico)) throw new Error("NOT_FOUND_ID");
+    
+    const categoria = await CategoriaModel.getByIdSinFiltro(idNumerico)
+    if(!categoria) {
+      throw new Error("CATEGORIA_NOT_FOUND");
+    }
+    return await CategoriaModel.activarCategoria(idNumerico);
   }
 }
 
