@@ -29,6 +29,17 @@ const CategoriaService = {
 
 
     return await CategoriaModel.update(idNumerico, nombre);
+  },
+
+  // Ocultar una categoria
+  OcultarCategoriaId: async(id: string | string[] | undefined) => {
+    const idNumerico = Number(id);
+    const categoria = await CategoriaModel.getById(idNumerico);
+
+    if(isNaN(idNumerico)) throw new Error("NOT_FOUND_ID");
+    if(!categoria) throw new Error("CATEGORIA_NOT_FOUND");
+
+    return await CategoriaModel.deleteLogical(idNumerico);
   }
 }
 

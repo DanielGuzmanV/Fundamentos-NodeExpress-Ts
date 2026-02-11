@@ -16,7 +16,7 @@ const CategoriaModel = {
 
   getById: (id: number): Promise<Categoria | undefined> => {
     return new Promise((resolve, reject) => {
-      const sql = "SELECT * FROM categorias WHERE id = ?";
+      const sql = "SELECT * FROM categorias WHERE id = ? AND activo = 1";
 
       db.get(sql, [id], (err, row) => {
         if(err) return reject(err);
@@ -55,10 +55,6 @@ const CategoriaModel = {
       
       db.run(sql, [id], function(err) {
         if(err) return reject(err);
-
-        if(this.changes === 0) {
-          return reject(new Error("La categoria no existe o ya esta oculta"));
-        }
         resolve();
       })
     })

@@ -70,7 +70,7 @@ export const actualizarCategoria = async(req: Request, res: Response, next: Next
 export const ocultarCategoria = async(req: Request, res: Response, next: NextFunction) => {
   try {
     const {id} = req.params;
-    await CategoriaModel.deleteLogical(Number(id));
+    await CategoriaService.OcultarCategoriaId(id);
 
     res.json({
       mensaje: "Categoria ocultada correctamente",
@@ -78,8 +78,11 @@ export const ocultarCategoria = async(req: Request, res: Response, next: NextFun
     })
 
   } catch (err: any) {
-    if(err.message === "La categoria no existe o ya esta oculta") {
-      return res.status(400).json({error: err.message});
+    if(err.message === "NOT_FOUND_ID") {
+      return res.status(404).json({error: "ID no valido"})
+    }
+    if(err.message === "CATEGORIA_NOT_FOUND") {
+      return res.status(400).json({error: "La categoria no existe o ya esta oculta"});
     }
     next(err);
   }
