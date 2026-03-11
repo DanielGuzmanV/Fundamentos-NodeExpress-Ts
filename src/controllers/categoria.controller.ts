@@ -114,7 +114,7 @@ export const mostrarCategoria = async(req: Request, res: Response, next: NextFun
 export const eliminarCategoria = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const {id} = req.params;
-    await CategoriaModel.deleteCategoria(Number(id));
+    await CategoriaService.eliminarCategoriaId(id);
     res.json({
       mensaje: "Categoria eliminada permanentemente",
       id_Cat: id
@@ -125,8 +125,11 @@ export const eliminarCategoria = async (req: Request, res: Response, next: NextF
         error: "No puedes eliminarla, tiene productos asociados. Prueba ocultándola."
       })
     }
-    if(err.message === "No se encontro la categoria para eliminar") {
-      return res.status(404).json({error: err.message});
+    if(err.message == "NOT_FOUND_ID") {
+      return res.status(404).json({error: "ID no valido"});
+    }
+    if(err.message === "CATEGORIA_NOT_FOUND") {
+      return res.status(404).json({error: "No se encontro la categoria para eliminar"});
     }
   }
 }

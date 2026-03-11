@@ -52,6 +52,16 @@ const CategoriaService = {
       throw new Error("CATEGORIA_NOT_FOUND");
     }
     return await CategoriaModel.activarCategoria(idNumerico);
+  },
+
+  eliminarCategoriaId: async(id: string | string[] | undefined) => {
+    const idNumerico = Number(id);
+    if(isNaN(idNumerico)) throw new Error("NOT_FOUND_ID");
+
+    const categoria = await CategoriaModel.getById(idNumerico);
+    if(!categoria) throw new Error("CATEGORIA_NOT_FOUND")
+    
+    return await CategoriaModel.deleteCategoria(idNumerico);
   }
 }
 

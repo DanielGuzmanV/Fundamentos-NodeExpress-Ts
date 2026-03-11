@@ -91,7 +91,6 @@ const CategoriaModel = {
       
       db.run(sql, [id], function(err) {
         if(err) return reject(err);
-        if(this.changes === 0) return reject(new Error("No se encontro la categoria para eliminar"));
         resolve();
       });
     });
