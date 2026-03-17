@@ -62,6 +62,13 @@ const CategoriaService = {
     if(!categoria) throw new Error("CATEGORIA_NOT_FOUND")
     
     return await CategoriaModel.deleteCategoria(idNumerico);
+  },
+
+  eliminarTablaCat: async() => {
+    const total = await CategoriaModel.countAll();
+    if(total === 0) throw new Error("NO_CATEGORIAS_FOUND");
+    
+    return await CategoriaModel.deleteAll();
   }
 }
 

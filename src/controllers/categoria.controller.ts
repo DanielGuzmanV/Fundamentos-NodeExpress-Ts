@@ -137,11 +137,11 @@ export const eliminarCategoria = async (req: Request, res: Response, next: NextF
 // Consulta 7: Eliminar todas las categorias
 export const vaciarTablaCat = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    await CategoriaModel.deleteAll();
+    await CategoriaService.eliminarTablaCat();
     res.json({mensaje: "Se han eliminado todas las categorias"});
   } catch (err: any) {
-    if(err.message === "No se encontraron categorias para eliminar") {
-      return res.status(404).json({error: err.message})
+    if(err.message === "NO_CATEGORIAS_FOUND") {
+      return res.status(404).json({error: "No se encontraron categorias para eliminar"})
     }
     next(err);
   }

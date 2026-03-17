@@ -96,13 +96,23 @@ const CategoriaModel = {
     });
   },
 
+  // Contar el total de registros
+  countAll: (): Promise<number> => {
+    return new Promise((resolve, reject) => {
+      const sql = "SELECT COUNT(*) as total FROM categorias";
+        db.get(sql, [], (err, row: any) => {
+          if(err) return reject(err);
+          resolve(row.total)
+        })
+    })
+  },
+
   // Eliminar toda la tabla de categorias
   deleteAll:(): Promise<void> => {
     return new Promise((resolve, reject) => {
       const sql = "DELETE FROM categorias";
       db.run(sql, [], function(err) {
         if(err) return reject(err);
-        if(this.changes === 0) return reject(new Error("No se encontraron categorias para eliminar"));
         resolve();
       })
     })
