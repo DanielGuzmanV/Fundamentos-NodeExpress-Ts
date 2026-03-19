@@ -5,21 +5,39 @@ import ProductoService from "../services/producto.service.js";
 // Consulta 1: Obtener todos
 export const obtenerProductos = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const rows = await ProductoService.listaProductos();
+    const filtros = req.query;
+    const rows = await ProductoService.listaProductos(filtros);
 
     res.status(200).json({
-      nota: rows.length > 0 ? "Productos obtenidos" : "No se encontraron productos",
-      cantidad: rows.length,
-      productos: rows.length > 0 ? rows : {
+      nota: "Productos obtenidos",
+      pagina_actual: parseInt(req.query.pagina as string) || 1,
+      cantidad_en_pagina: rows.length,
+      productos: rows,
+    })
+
+  } catch (err: any) {
+    if(err.message === "NOT_PRODUCTS") {
+      return res.status(404).json({
+        error: "No se encontraron productos",
         formato_producto: {
           nombre: "string",
           precio: "number",
           stock: "number",
           categoria_id: "number",
         }
-      } 
-    })
-  } catch (err) {
+      })
+    }
+
+    const errorMap: Record<string, {status: number, msg: string}> = {
+      "INVALID_PRICE_FORMAT": { status: 400, msg: "El precio mínimo debe ser un número válido." },
+      "NEGATIVE_PRICE":       { status: 400, msg: "El precio no puede ser negativo." },
+      "INVALID_PAGE":         { status: 400, msg: "La página debe ser un número mayor a 0." },
+      "INVALID_LIMIT":        { status: 400, msg: "El límite debe ser un número positivo." },
+      "LIMIT_TOO_HIGH":       { status: 400, msg: "No puedes solicitar más de 50 productos por página." },
+      "INVALID_ORDER_TYPE":   { status: 400, msg: "El tipo de orden no es válido. Usa: caro, barato o nombre." },
+    }
+    const error = errorMap[err.message];
+    if(error) return res.status(error.status).json({error: error.msg})
     next(err);
   }
 };

@@ -3,15 +3,44 @@ import { Producto } from '../types/index.js';
 
 const ProductoModel = {
 
-  // Consulta 1: obtener todos los productos
-  getAll: (): Promise<Producto[]> => {
+  // Consulta 1: obtener todos los productos con filtros
+  getAll: (filtros: any): Promise<Producto[]> => {
     return new Promise((resolve, reject) => {
-      const sql = `
+      const {min_precio, nombre, orden, limite, pagina } = filtros;
+      
+      // Obtenemos todos los productos que estan activos
+      let sql = `
         SELECT p.*, c.nombre AS categoria_nombre
         FROM productos p
         LEFT JOIN categorias c ON p.categoria_id = c.id
+        WHERE p.activo = 1
       `;
-      db.all(sql, [], (err, rows) => {
+      let parametros: any[] = [];
+
+      // Filtros dinamicos
+      if(min_precio) {
+        sql += " AND p.precio <= ?";
+        parametros.push(min_precio);
+      }
+
+      if(nombre) {
+        sql += " AND p.nombre LIKE ?";
+        parametros.push(`${nombre}%`);
+      }
+
+      // Ordenamientos
+      if(orden === 'caro') sql += " ORDER BY p.precio DESC";
+      else if(orden === 'barato') sql += " ORDER BY p.precio ASC";
+      else if(orden === 'nombre') sql += " ORDER BY p.nombre ASC";
+
+      // Paginacion
+      const resPorPagina = parseInt(limite) || 5;
+      const offset = ((parseInt(pagina) || 1) - 1) * resPorPagina;
+
+      sql += " LIMIT ? OFFSET ?";
+      parametros.push(resPorPagina, offset);
+
+      db.all(sql, parametros, (err, rows) => {
         if(err) return reject(err);
         resolve(rows as Producto[]);
       });
