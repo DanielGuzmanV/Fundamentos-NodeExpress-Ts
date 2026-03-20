@@ -4,7 +4,7 @@ import { Producto } from "../types/index.js";
 
 const ProductoService = {
 
-  // Obtener productos procesados
+  // Service 1: obtener productos procesados
   listaProductos: async(filtros: any) => {
     const {min_precio, pagina, limite, orden} = filtros;
 
@@ -46,32 +46,27 @@ const ProductoService = {
       }
     });
   },
-  // Agregar validaciones para el nombre, orden y controlar si en los strings son strings y los numeros son numericos
 
-
-  // validacion y verificacion
+  // Service 2: obtener productos por el ID
   obtenerProductoID: async (id: string | string[] | undefined) => {
     const idNumerico = Number(id);
-
     if(isNaN(idNumerico)) throw new Error("NOT_FOUND_ID")
 
     const producto = await ProductoModel.getById(idNumerico);
-
     if(!producto) throw new Error("NOT_FOUND_PRODUCT")
 
-    const {categoria_id, activo, ...productoId} = producto;
-
-    return productoId;
+    return producto;
   },
 
   // Creacion de producto con validacion de negocio
   crearNuevoProducto: async(datos: Producto) => {
-    const categorias = await CategoriaModel.getAll();
-    const existeCat = categorias.find(c => c.id === datos.categoria_id);
-
+    // Verificamos si la categoria existe:
+    const existeCat = await CategoriaModel.getById(datos.categoria_id);
     if(!existeCat) throw new Error("CATEGORIA_NOT_FOUND");
 
-    if(datos.precio <= 0) throw new Error("INVALID_PRICE");
+    // Verificamos si el nombre ya existe:
+    const productoExiste = await ProductoModel.getByName(datos.nombre);
+    if(productoExiste) throw new Error("PRODUCT_NAME_EXISTS");
 
     return await ProductoModel.create(datos);
   },
