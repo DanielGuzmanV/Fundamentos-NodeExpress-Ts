@@ -68,20 +68,24 @@ export const productoID = async (req: Request, res: Response, next: NextFunction
 export const crearProducto = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const datosProducto: Producto = req.body;
-    await ProductoService.crearNuevoProducto(datosProducto);
+    const nuevoID = await ProductoService.crearNuevoProducto(datosProducto);
     
     res.status(201).json({
       mensaje: "Producto guardado con exito",
+      id: nuevoID,
       producto: datosProducto
     });
 
   } catch (err: any) {
-    if(err.message === "CATEGORIA_NOT_FOUND") {
-      return res.status(400).json({error: "La categoria especificada no existe"});
+    const erroresNegocio: Record<string, string> = {
+      "CATEGORIA_NOT_FOUND": "La categoria especificada no existe en el sistema",
+      "PRODUCT_NAME_EXISTS": "El nombre del producto ya existe",
+    };
+
+    if(erroresNegocio[err.message]) {
+      return res.status(400).json({error: erroresNegocio[err.message]})
     }
-    if(err.message === "INVALID_PRICE") {
-      return res.status(400).json({error: "El precio debe ser un numero valido"})
-    }
+  
     next(err)
   }
 }
