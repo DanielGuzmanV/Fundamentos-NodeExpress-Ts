@@ -63,15 +63,26 @@ const ProductoModel = {
     });
   },
 
+  // Consulta para buscar producto por nombre exacto
+  getByName: (nombre: string): Promise<Producto | undefined> => {
+    return new Promise((resolve, reject) => {
+      const sql = "SELECT * FROM productos WHERE nombre = ? AND activo = 1";
+      db.get(sql, [nombre], (err, row) => {
+        if(err) return reject(err);
+        resolve(row as Producto | undefined);
+      })
+    })
+  },
+
   // Consulta 3: agregar un nuevo producto
-  create: (producto: Producto): Promise<void> => {
+  create: (producto: Producto): Promise<number> => {
     return new Promise((resolve, reject) => {
       const {nombre, precio, stock, categoria_id} = producto;
       const sql = "INSERT INTO productos (nombre, precio, stock, categoria_id) VALUES (?, ?, ?, ?)";
 
       db.run(sql, [nombre, precio, stock, categoria_id], function(err) {
         if(err) return reject(err);
-        resolve();
+        resolve(this.lastID);
       });
     });
   }
