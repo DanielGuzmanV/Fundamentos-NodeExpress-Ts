@@ -71,6 +71,27 @@ const ProductoService = {
     return await ProductoModel.create(datos);
   },
 
+  actualizarProducto: async(id: number, datos: Producto) => {
+    // Verificamos si el producto existe:
+    const productoActual = await ProductoModel.getById(id);
+    if(!productoActual) throw new Error("PRODUCT_NOT_FOUND");
+
+    // Verificamos si el nombre ya existe:
+    if(datos.nombre !== productoActual.nombre) {
+      const duplicado = await ProductoModel.getByName(datos.nombre);
+      if(duplicado) throw new Error("PRODUCT_NAME_EXISTS");
+    }
+
+    // Verificamos que la categoria actualizada exista:
+    const existeCat = await CategoriaModel.getById(datos.categoria_id);
+    if(!existeCat) throw new Error("CATEGORIA_NOT_FOUND");
+
+    return await ProductoModel.update(id, datos);
+  },
+
+
+  
+
 }
 
 export default ProductoService;

@@ -3,6 +3,7 @@ import {
   obtenerProductos, 
   crearProducto,
   productoID,
+  editarProducto
 } from "../controllers/producto.controller.js";
 import validarProducto from "../middlewares/producto.validator.js";
 
@@ -23,5 +24,8 @@ router.get('/:id', productoID)
 
 // POST /productos = guardar un nuevo producto
 router.post('/', validarProducto, crearProducto);
+
+// PUT /productos/:id editar un producto por el ID
+router.put('/:id', validarProducto, editarProducto)
 
 export default router;

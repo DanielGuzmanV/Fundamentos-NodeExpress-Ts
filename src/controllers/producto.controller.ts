@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { Producto } from "../types/index.js";
 import ProductoService from "../services/producto.service.js";
+import { error } from "console";
 
 // Consulta 1: Obtener todos
 export const obtenerProductos = async (req: Request, res: Response, next: NextFunction) => {
@@ -87,5 +88,32 @@ export const crearProducto = async (req: Request, res: Response, next: NextFunct
     }
   
     next(err)
+  }
+}
+
+// Consulta 4: actualizar un producto existente
+export const editarProducto = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { id } = req.params;
+    const datos: Producto = req.body;
+
+    await ProductoService.actualizarProducto(Number(id), datos);
+    
+    res.status(200).json({
+      mensaje: "Producto actualizado correctamente",
+      id: id,
+      datos_actualizados: datos,
+    })
+  } catch (err: any) {
+    const errorMap: Record<string, {status: number, msg: string}> = {
+      "PRODUCT_NOT_FOUND":   {status: 400, msg: "El producto que intentas editar no existe."},
+      "PRODUCT_NAME_EXISTS": {status: 400, msg: "No puedes usar ese nombre, ya pertenece a otro producto."},
+      "CATEGORIA_NOT_FOUND": {status: 400, msg: "La categoría especificada no es válida."}
+    };
+
+    const error = errorMap[err.message];
+    if(error) return res.status(error.status).json({error: error.msg});
+
+    next(err);
   }
 }

@@ -85,7 +85,31 @@ const ProductoModel = {
         resolve(this.lastID);
       });
     });
-  }
+  },
+
+  // Consulta 4: actualizar los datos del producto
+  update: (id: number, datos: Producto): Promise<number> => {
+    return new Promise((resolve, reject) => {
+      const {nombre, precio, stock, categoria_id} = datos;
+
+      const sql = `
+        UPDATE productos SET
+        nombre = ?,
+        precio = ?,
+        stock = ?,
+        categoria_id = ?
+        WHERE id = ? AND activo = 1
+      `;
+
+      db.run(sql, [nombre, precio, stock, categoria_id, id], function(err) {
+        if(err) return reject(err);
+        resolve(this.changes)
+      })
+    })
+  },
+
+  
+
 }
 
 export default ProductoModel;
