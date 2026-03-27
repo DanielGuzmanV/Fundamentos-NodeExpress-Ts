@@ -108,7 +108,25 @@ const ProductoModel = {
     })
   },
 
-  
+  // Consulta 5: actualizar un dato en especifico
+  updatePartial: (id: number, campos: Partial<Producto>): Promise<number> => {
+    return new Promise((resolve, reject) => {
+      const keys = Object.keys(campos);
+
+      if(keys.length === 0) return reject(new Error("NO_FIELDS_TO_UPDATE"));
+
+      const setSql = keys.map(key => `${key} = ?`).join(", ");
+      const valores = Object.values(campos);
+      valores.push(id);
+
+      const sql = `UPDATE productos SET ${setSql} WHERE id = ? AND activo = 1`;
+
+      db.run(sql, valores, function(err) {
+        if(err) return reject(err);
+        resolve(this.changes);
+      })
+    })
+  }
 
 }
 

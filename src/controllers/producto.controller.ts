@@ -1,7 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { Producto } from "../types/index.js";
 import ProductoService from "../services/producto.service.js";
-import { error } from "console";
 
 // Consulta 1: Obtener todos
 export const obtenerProductos = async (req: Request, res: Response, next: NextFunction) => {
@@ -114,6 +113,36 @@ export const editarProducto = async (req: Request, res: Response, next: NextFunc
     const error = errorMap[err.message];
     if(error) return res.status(error.status).json({error: error.msg});
 
+    next(err);
+  }
+}
+
+// Consulta 5: actualizamos parcialmente un producto
+export const actualizarParcial = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { id } = req.params;
+    const campos: Partial<Producto> = req.body;
+
+    await ProductoService.actualizarParcial(Number(id), campos);
+
+    res.status(200).json({
+      mensaje: "Producto actualizado parcialmente",
+      id_producto: id,
+      campos_cambiados: campos,
+    });
+
+  } catch (err: any) {
+    const errorMap: Record<string, {status: number, msg: string}> = {
+      "PRODUCT_NOT_FOUND": {status: 400, msg: "No se encontro el producto para actualizar"},
+      "PRODUCT_NAME_EXISTS": {status: 400, msg: "El nuevo nombre ya esta en uso"},
+      "CATEGORIA_NOT_FOUND": {status: 400, msg: "La categoria no existe"},
+      "NO_FIELDS_TO_UPDATE": {status: 400, msg: "No enviaste campos para modificar"},
+    };
+
+    const error = errorMap[err.message];
+    if(error) {
+      return res.status(error.status).json({error: error.msg})
+    }
     next(err);
   }
 }

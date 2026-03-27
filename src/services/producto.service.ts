@@ -89,7 +89,23 @@ const ProductoService = {
     return await ProductoModel.update(id, datos);
   },
 
+  // Services para validar y actualizar parcialmente un producto
+  actualizarParcial: async (id: number, campos: Partial<Producto>) => {
+    const productoActual = await ProductoModel.getById(id);
+    if(!productoActual) throw new Error("PRODUCT_NOT_FOUND");
 
+    if(campos.nombre && campos.nombre !== productoActual.nombre) {
+      const duplicado = await ProductoModel.getByName(campos.nombre);
+      if(duplicado) throw new Error("PRODUCT_NAME_EXISTS");
+    }
+
+    if(campos.categoria_id) {
+      const existeCat = await CategoriaModel.getById(campos.categoria_id);
+      if(!existeCat) throw new Error("CATEGORIA_NOT_FOUND");
+    }
+
+    return await ProductoModel.updatePartial(id, campos);
+  }
   
 
 }
