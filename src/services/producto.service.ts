@@ -105,7 +105,20 @@ const ProductoService = {
     }
 
     return await ProductoModel.updatePartial(id, campos);
-  }
+  },
+
+  // Services para ocultar un producto al cliente pero no en la db
+  ocultarProducto: async (id: number) => {
+    const producto =await ProductoModel.getById(id);
+
+    if(!producto) {
+      throw new Error("PRODUCT_NOT_FOUND_OR_ALREADY_HIDDEN");
+    }
+
+    await ProductoModel.updateState(id);
+
+    return producto;
+},
   
 
 }

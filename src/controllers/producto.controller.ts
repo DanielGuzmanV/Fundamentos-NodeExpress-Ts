@@ -146,3 +146,30 @@ export const actualizarParcial = async (req: Request, res: Response, next: NextF
     next(err);
   }
 }
+
+// Consulta 6: ocultar un producto logicamente
+export const ocultarProducto = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { id } = req.params;
+
+    const productoOcultado = await ProductoService.ocultarProducto(Number(id))
+
+    res.status(200).json({
+      mensaje: "Producto ocultado con exito",
+      id_ocultado: id,
+      detalles: {
+        nombre: productoOcultado.nombre,
+        precio: productoOcultado.precio,
+        stock: productoOcultado.stock,
+        categoria_id: productoOcultado.categoria_id,
+      }
+    })
+  } catch (err: any) {
+    if(err.message === "PRODUCT_NOT_FOUND_OR_ALREADY_HIDDEN") {
+      return res.status(404).json({
+        error: "El producto no existe o ya ha sido ocultado previamente."
+      })
+    }
+    next(err);
+  }
+}

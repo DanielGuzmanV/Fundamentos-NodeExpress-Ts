@@ -126,6 +126,18 @@ const ProductoModel = {
         resolve(this.changes);
       })
     })
+  },
+
+  // consulta 6: ocultar un producto
+  updateState: (id: number): Promise<number> => {
+    return new Promise((resolve, reject) => {
+      const sql = "UPDATE productos SET activo = 0 WHERE id = ?";
+
+      db.run(sql, [id], function(err) {
+        if(err) return reject(err);
+        resolve(this.changes);
+      })
+    })
   }
 
 }
