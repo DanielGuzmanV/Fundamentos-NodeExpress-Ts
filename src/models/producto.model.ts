@@ -156,11 +156,33 @@ const ProductoModel = {
     })
   },
 
-  // Consulta 7.1: cambiar activo a 1
+  // Consulta 8: cambiar activo a 1 un producto ocultado
   restoreState: (id: number): Promise<number> => {
     return new Promise((resolve, reject) => {
       const sql = "UPDATE productos SET activo = 1 WHERE id = ?";
       db.run(sql, [id], function(err) {
+        if(err) return reject(err);
+        resolve(this.changes);
+      })
+    })
+  },
+
+  // Consulta 9: Borrar un producto permanentemente por id
+  delete: (id: number): Promise<number> => {
+    return new Promise((resolve, reject) => {
+      const sql = "DELETE FROM productos WHERE id = ?";
+      db.run(sql, [id], function(err) {
+        if(err) return reject(err);
+        resolve(this.changes);
+      })
+    })
+  },
+
+  // Consulta 10: Borrar todos los productos de la db
+  deleteAll: (): Promise<number> => {
+    return new Promise((resolve, reject) => {
+      const sql = "DELETE FROM productos";
+      db.run(sql, [], function(err) {
         if(err) return reject(err);
         resolve(this.changes);
       })

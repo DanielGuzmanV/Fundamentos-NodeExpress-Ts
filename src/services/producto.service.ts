@@ -132,6 +132,23 @@ const ProductoService = {
     await ProductoModel.restoreState(id);
 
     return producto;
+  },
+
+  // Services para eliminar un solo producto
+  eliminarProducto: async (id: number) => {
+    const producto = await ProductoModel.getAnyById(id);
+    if(!producto) throw new Error("PRODUCT_NOT_FOUND");
+
+    await ProductoModel.delete(id);
+    return producto;
+  },
+
+  // Services para eliminar todos los productos
+  eliminarTodo: async () => {
+    const cantidadBorrada = await ProductoModel.deleteAll();
+    if(cantidadBorrada === 0) throw new Error("NO_PRODUCTS_TO_DELETE");
+
+    return cantidadBorrada;
   }
 }
 

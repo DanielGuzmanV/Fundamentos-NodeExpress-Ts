@@ -202,3 +202,38 @@ export const restaurarProducto = async (req: Request, res: Response, next: NextF
     next(err);
   }
 }
+
+// Consulta 8: Eliminar un producto
+export const eliminarProducto = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const {id} = req.params;
+    const productoEliminado = await ProductoService.eliminarProducto(Number(id))
+
+    res.status(200).json({
+      mensaje: "Producto eliminado de la base de datos",
+      id_eliminado: id,
+      datos_eliminados: productoEliminado,
+    })
+  } catch (err: any) {
+    if(err.message === "PRODUCT_NOT_FOUND") {
+      return res.status(404).json({error: "El producto no existe o ya fue eliminado"});
+    }
+    next(err);
+  }
+}
+
+// Consulta 9: eliminar todos los productos
+export const eliminarTodo = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const total = await ProductoService.eliminarTodo();
+    res.status(200).json({
+      mensaje: "Limpieza total de la DB",
+      cantidad_eliminada: total,
+    })
+  } catch (err: any) {
+    if(err.message === "NO_PRODUCTS_TO_DELETE") {
+      return res.status(404).json({error: "La tabla ya esta vacia"});
+    }
+    next(err);
+  }
+}
