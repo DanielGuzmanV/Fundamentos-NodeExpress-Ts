@@ -110,17 +110,29 @@ const ProductoService = {
   // Services para ocultar un producto al cliente pero no en la db
   ocultarProducto: async (id: number) => {
     const producto =await ProductoModel.getById(id);
-
     if(!producto) {
       throw new Error("PRODUCT_NOT_FOUND_OR_ALREADY_HIDDEN");
     }
 
     await ProductoModel.updateState(id);
+    return producto;
+  },
+  
+  // Services para mostrar un producto ocultado
+  restaurarProducto: async (id: number) => {
+    const producto = await ProductoModel.getAnyById(id)
+    if(!producto) {
+      throw new Error("PRODUCT_NOT_FOUND");
+    }
+
+    if(producto.activo === 1) {
+      throw new Error("PRODUCT_ALREADY_ACTIVE");
+    }
+
+    await ProductoModel.restoreState(id);
 
     return producto;
-},
-  
-
+  }
 }
 
 export default ProductoService;

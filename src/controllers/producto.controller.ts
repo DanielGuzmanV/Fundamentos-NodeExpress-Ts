@@ -173,3 +173,32 @@ export const ocultarProducto = async (req: Request, res: Response, next: NextFun
     next(err);
   }
 }
+
+// Consulta 7: mostrar un producto ocultado
+export const restaurarProducto = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const {id} = req.params;
+    const productoRestaurado = await ProductoService.restaurarProducto(Number(id));
+
+    res.status(200).json({
+      mensaje: "Producto restaurado con exito",
+      id: id,
+      producto: {
+        nombre: productoRestaurado.nombre,
+        precio: productoRestaurado.precio,
+        stock: productoRestaurado.stock,
+      }
+    })
+
+  } catch (err: any) {
+    const errorMap: Record<string, string> = {
+      "PRODUCT_NOT_FOUND": "El producto no existe en la base de datos.",
+      "PRODUCT_ALREADY_ACTIVE": "Este producto ya se encuentra activo, no es necesario restaurarlo."
+    }
+
+    if(errorMap[err.message]) {
+      return res.status(400).json({error: errorMap[err.message]})
+    }
+    next(err);
+  }
+}

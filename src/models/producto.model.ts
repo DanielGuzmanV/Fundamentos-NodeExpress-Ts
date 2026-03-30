@@ -138,6 +138,33 @@ const ProductoModel = {
         resolve(this.changes);
       })
     })
+  },
+
+  // Consulta 7: buscar cualquier producto (activo o no)
+  getAnyById: (id: number): Promise<Producto | undefined> => {
+    return new Promise((resolve, reject) => {
+      const sql = `
+        SELECT p.*, c.nombre AS categoria
+        FROM productos p
+        LEFT JOIN categorias c ON p.categoria_id = c.id
+        WHERE p.id = ?
+      `;
+      db.get(sql, [id], (err, row) => {
+        if(err) return reject(err);
+        resolve(row as Producto | undefined);
+      })
+    })
+  },
+
+  // Consulta 7.1: cambiar activo a 1
+  restoreState: (id: number): Promise<number> => {
+    return new Promise((resolve, reject) => {
+      const sql = "UPDATE productos SET activo = 1 WHERE id = ?";
+      db.run(sql, [id], function(err) {
+        if(err) return reject(err);
+        resolve(this.changes);
+      })
+    })
   }
 
 }

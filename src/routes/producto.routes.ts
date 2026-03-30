@@ -6,6 +6,7 @@ import {
   editarProducto,
   actualizarParcial,
   ocultarProducto,
+  restaurarProducto,
 } from "../controllers/producto.controller.js";
 import validarProducto from "../middlewares/producto.validator.js";
 
@@ -35,5 +36,8 @@ router.patch('/:id', actualizarParcial)
 
 // DELETE /productos/:id ocultar un producto por el id
 router.delete('/:id', ocultarProducto)
+
+// PATCH /productos/:id mostrar un producto ocultado por el id
+router.patch('/restore/:id', restaurarProducto);
 
 export default router;
