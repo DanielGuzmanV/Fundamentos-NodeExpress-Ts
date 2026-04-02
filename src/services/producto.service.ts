@@ -1,12 +1,13 @@
 import ProductoModel from "../models/producto.model.js";
 import CategoriaModel from "../models/categoria.model.js";
 import { Producto } from "../types/index.js";
+import { FiltrosProducto } from "../types/productos.js";
 
 const ProductoService = {
 
   // Service 1: obtener productos procesados
-  listaProductos: async(filtros: any) => {
-    const {min_precio, pagina, limite, orden} = filtros;
+  listaProductos: async(filtros: FiltrosProducto) => {
+    const {min_precio, pagina, limite, orden, nombre} = filtros;
 
     // Validar precio minimo:
     if(min_precio) {
@@ -32,6 +33,16 @@ const ProductoService = {
     const ordenesValidos = ['caro', 'barato', 'nombre'];
     if(orden && !ordenesValidos.includes(orden)) {
       throw new Error("INVALID_ORDER_TYPE");
+    }
+
+    // Validar el nombre
+    if(nombre !== undefined) {
+      const nombreLimpio = String(nombre).trim();
+
+      if(nombreLimpio.length === 0) throw new Error("EMPTY_NAME_FILTER");
+      if(nombreLimpio.length > 10) throw new Error("NAME_FILTER_TOO_LONG");
+
+      filtros.nombre = nombreLimpio;
     }
 
     const productos = await ProductoModel.getAll(filtros);

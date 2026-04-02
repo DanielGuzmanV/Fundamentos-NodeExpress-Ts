@@ -1,10 +1,11 @@
 import db from '../config/database.js';
 import { Producto } from '../types/index.js';
+import { FiltrosProducto } from '../types/productos.js';
 
 const ProductoModel = {
 
   // Consulta 1: obtener todos los productos con filtros
-  getAll: (filtros: any): Promise<Producto[]> => {
+  getAll: (filtros: FiltrosProducto): Promise<Producto[]> => {
     return new Promise((resolve, reject) => {
       const {min_precio, nombre, orden, limite, pagina } = filtros;
       
@@ -34,8 +35,9 @@ const ProductoModel = {
       else if(orden === 'nombre') sql += " ORDER BY p.nombre ASC";
 
       // Paginacion
-      const resPorPagina = parseInt(limite) || 5;
-      const offset = ((parseInt(pagina) || 1) - 1) * resPorPagina;
+      const resPorPagina = parseInt(String(limite || 5));
+      const pagActual = parseInt(String(pagina || 1));
+      const offset = (pagActual - 1) * resPorPagina;
 
       sql += " LIMIT ? OFFSET ?";
       parametros.push(resPorPagina, offset);
