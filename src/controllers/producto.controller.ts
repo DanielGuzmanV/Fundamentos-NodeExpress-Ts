@@ -35,6 +35,8 @@ export const obtenerProductos = async (req: Request, res: Response, next: NextFu
       "INVALID_LIMIT":        { status: 400, msg: "El límite debe ser un número positivo." },
       "LIMIT_TOO_HIGH":       { status: 400, msg: "No puedes solicitar más de 50 productos por página." },
       "INVALID_ORDER_TYPE":   { status: 400, msg: "El tipo de orden no es válido. Usa: caro, barato o nombre." },
+      "EMPTY_NAME_FILTER":    { status: 400, msg: "El nombre no puede estar vacio" },
+      "NAME_FILTER_TOO_LONG": { status: 400, msg: "El nombre es demasiado largo" },
     }
     const error = errorMap[err.message];
     if(error) return res.status(error.status).json({error: error.msg})
