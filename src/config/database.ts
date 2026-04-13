@@ -17,6 +17,8 @@ const db = new sqlite3.Database(dbPath, (err: Error | null) => {
 });
 
 db.serialize(() => {
+
+  // Tabla categorias:
   db.run(`
       CREATE TABLE IF NOT EXISTS categorias (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -29,6 +31,7 @@ db.serialize(() => {
     }
   );
   
+  // Tabla de productos:
   db.run(`
       CREATE TABLE IF NOT EXISTS productos (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -44,6 +47,41 @@ db.serialize(() => {
       else console.log("Tabla 'Productos' lista");
     }
   );
+
+  // Tabla de usuarios:
+  db.run(`
+      CREATE TABLE IF NOT EXISTS usuarios (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username TEXT NOT NULL UNIQUE,
+        password TEXT NOT NULL,
+        rol TEXT DEFAULT 'vendedor',
+        fecha_creacion DATETIME DEFAULT CURRENT_TIMESTAMP
+      )
+    `, (err) => {
+      if (err) console.error("Error al crear la tabla usuarios:", err.message);
+      else console.log("Tabla 'Usuarios' lista");
+    }
+  );
+
+  // Tabla de ventas:
+  db.run(`
+      CREATE TABLE IF NOT EXISTS ventas (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        producto_id INTEGER NOT NULL,
+        usuario_id INTEGER NOT NULL,
+        cantidad INTEGER DEFAULT 1,
+        precio_unidad REAL NOT NULL,
+        total REAL NOT NULL,
+        fecha DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (producto_id) REFERENCES productos (id),
+        FOREIGN KEY (usuario_id) REFERENCES usuarios (id)
+      )
+    `, (err) => {
+      if (err) console.error("Error al crear la tabla de ventas:", err.message);
+      else console.log("Tabla 'Ventas' lista");
+    }
+  );  
+
 });
 
 export default db;
