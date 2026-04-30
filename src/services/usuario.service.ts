@@ -5,12 +5,32 @@ import { User } from "../types/user.js";
 
 const UsuarioServices = {
 
+  // Listas todos los usuarios:
+  listarUsuarios: async () => {
+    return await UsuarioModel.getAll();
+  },
+
+  // Obtener un usuario por ID
+  obtenerUsuarioPorId: async (id: string[] | string | undefined) => {
+    const idNum = Number(id);
+    if(isNaN(idNum)) throw new Error("NOT_FOUND_ID");
+
+    const usuario = await UsuarioModel.getById(idNum);
+    if(!usuario) throw new Error("USER_NOT_FOUND");
+
+    return usuario;
+  },
+
   // Registrar un nuevo usuario:
   registrarUsuario: async (datos: User) => {
     const {username, password, rol} = datos;
 
     // Validacion de negocio
     if(!username || !password) throw new Error("MISSING_DATA");
+
+    // Validacion si ya existe el nombre del usuario
+    const usuarioExistente = await UsuarioModel.getByUsername(username);
+    if(usuarioExistente) throw new Error("USER_ALREADY_EXISTS");
 
     // Encriptar la contraseña antes de enviarla
     const saltRounds = 10;
@@ -38,11 +58,11 @@ const UsuarioServices = {
 
     // Buscamos si el usuario existe
     const usuario = await UsuarioModel.getByUsername(username);
-    if(!usuario) throw new Error("INVALID_CREDENTIALS");
+    if(!usuario) throw new Error("INVALID_CREDENTIALS_USER");
 
     // Comparar las contraseñas enviada con el hash
     const coincide = await bcrypt.compare(password, usuario.password);
-    if(!coincide) throw new Error("INVALID_CREDENTIALS");
+    if(!coincide) throw new Error("INVALID_CREDENTIALS_PASSWORD");
 
     // Generar el Token JWT
     const secret = process.env.JWT_SECRET || "clave_secreta_por_defecto";
@@ -65,22 +85,6 @@ const UsuarioServices = {
       },
       token
     }
-  },
-
-  // Listas todos los usuarios:
-  listarUsuarios: async () => {
-    return await UsuarioModel.getAll();
-  },
-
-  // Obtener un usuario por ID
-  obtenerUsuarioPorId: async (id: string | number | undefined) => {
-    const idNum = Number(id);
-    if(isNaN(idNum)) throw new Error("NOT_FOUND_ID");
-
-    const usuario = await UsuarioModel.getById(idNum);
-    if(!usuario) throw new Error("USER_NOT_FOUND");
-
-    return usuario;
   },
 
   // Actualizar informacion basica
