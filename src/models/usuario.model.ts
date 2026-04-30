@@ -57,7 +57,7 @@ export const UsuarioModel = {
     return new Promise((resolve, reject) => {
       const sql = "UPDATE usuarios SET username = ?, rol = ? WHERE id = ?";
 
-      db.run(sql, [id, username, rol], function(err) {
+      db.run(sql, [username, rol, id], function(err) {
         if(err) return reject(err);
         resolve();
       })
@@ -75,7 +75,8 @@ export const UsuarioModel = {
       })
     })
   },
-
+  
+  // Eliminar un usuario por el ID
   delete: async (id: number): Promise<void> => {
     return new Promise((resolve, reject) => {
       const sql = "DELETE FROM usuarios WHERE id = ?";
