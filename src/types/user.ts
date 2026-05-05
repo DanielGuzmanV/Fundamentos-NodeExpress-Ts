@@ -4,3 +4,9 @@ export interface User {
   password: string;
   rol?: string;
 };
+
+export interface UserPayload {
+  id: number;
+  username: string;
+  rol: string;
+}
