@@ -1,7 +1,7 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import UsuarioModel from "../models/usuario.model.js";
-import { User } from "../types/user.js";
+import { User, UserPayload } from "../types/user.js";
 
 const UsuarioServices = {
 
@@ -11,9 +11,16 @@ const UsuarioServices = {
   },
 
   // Obtener un usuario por ID
-  obtenerUsuarioPorId: async (id: string[] | string | undefined) => {
+  obtenerUsuarioPorId: async (id: string[] | string | undefined, userLogueado?: UserPayload) => {
     const idNum = Number(id);
+    if (!userLogueado) throw new Error("UNAUTHENTICATED");
+
     if(isNaN(idNum)) throw new Error("NOT_FOUND_ID");
+
+    // logica de autorizacion
+    if(userLogueado.rol !== 'admin' && userLogueado.id !== idNum) {
+      throw new Error("UNAUTHORIZED_ACCESS");
+    }
 
     const usuario = await UsuarioModel.getById(idNum);
     if(!usuario) throw new Error("USER_NOT_FOUND");
