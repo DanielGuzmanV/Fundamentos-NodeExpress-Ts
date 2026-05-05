@@ -1,12 +1,13 @@
 import { Router } from "express";
 import { loginUser, obtenerUsuarioId, obtenerUsuarios, registrarUser } from "../controllers/usuario.controller.js";
 import { authenticateToken } from "../middlewares/auth.middleware.js";
+import { authorizeRole } from "../middlewares/rol.middleware.js";
 
 const router = Router();
 
 // Rutas:
-// GET: /auth/usuarios = Obtener todos los usuarios
-router.get('/', authenticateToken, obtenerUsuarios);
+// GET: /auth/usuarios = Solo el adming puede obtener todos los usuarios
+router.get('/', authenticateToken, authorizeRole('admin'), obtenerUsuarios);
 
 // GET: /auth/:id = obtener un usuario por ID
 router.get('/:id', authenticateToken, obtenerUsuarioId);
