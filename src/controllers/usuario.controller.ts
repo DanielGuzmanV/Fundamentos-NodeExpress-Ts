@@ -19,19 +19,23 @@ export const obtenerUsuarios = async (req: Request, res: Response, next: NextFun
 export const obtenerUsuarioId = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const {id} = req.params;
-    const usuario = await UsuarioServices.obtenerUsuarioPorId(id);
+    const usuario = await UsuarioServices.obtenerUsuarioPorId(id, req.user);
 
     res.json({
       mensaje: "Usuario encontrado",
       usuario
     })
   } catch (err: any) {
-    if(err.message === "NOT_FOUND_ID") {
-      return res.status(400).json({error: "El ID proporcionado no es valido"});
-    };
-    if(err.message === "USER_NOT_FOUND") {
-      return res.status(400).json({error: "Usuario no encontrado"});
-    };
+    const errorMap: Record<string, {status: number, msg: string }> = {
+      "UNAUTHENTICATED": {status: 401, msg: "No has iniciado sesión"},
+      "NOT_FOUND_ID": {status: 400, msg: "El ID proporcionado no es valido"},
+      "USER_NOT_FOUND": {status: 404, msg: "Usuario no encontrado"},
+      "UNAUTHORIZED_ACCESS": {status: 403, msg: "No tienes permiso para ver este perfil"},
+    }
+
+    const errors = errorMap[err.message];
+
+    if(errors) return res.status(errors.status).json({error: errors.msg});
     next(err);
   }
 }
@@ -86,4 +90,8 @@ export const loginUser = async (req: Request, res: Response, next: NextFunction)
 
     next(err);
   }
+}
+
+export const obtenerUsuariosAdmin = async (req: Request, res: Response, next: NextFunction) => {
+  
 }
