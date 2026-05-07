@@ -132,7 +132,13 @@ const UsuarioServices = {
   },
 
   // Eliminar un usuario
-  eliminarUsuario: async (id: string | number | undefined) => {
+  eliminarUsuario: async (id: string[] | string | undefined, userLogueado?: UserPayload) => {
+    if(!userLogueado) throw new Error("UNAUTHENTICATED");
+
+    if(userLogueado.rol !== 'admin') {
+      throw new Error("UNAUTHORIZED_ACCESS");
+    }
+
     const idNum = Number(id);
     if(isNaN(idNum)) throw new Error("NOT_FOUND_ID");
 
