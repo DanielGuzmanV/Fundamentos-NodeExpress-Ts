@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { 
+  actualizarPassword,
   editarUsuario, 
   eliminarUsuario, 
   loginUser, 
@@ -29,6 +30,9 @@ router.post('/login', loginUser);
 router.put('/:id', authenticateToken, editarUsuario);
 
 // DELETE /auth/:id = Eliminar usuarios, solo el admin puede realizarlo
-router.delete('/:id', authenticateToken, authorizeRole('admin'), eliminarUsuario)
+router.delete('/:id', authenticateToken, authorizeRole('admin'), eliminarUsuario);
+
+// PATCH: /auth/:id/password = Actualizar constraseña
+router.patch('/:id/password', authenticateToken, actualizarPassword);
 
 export default router;
