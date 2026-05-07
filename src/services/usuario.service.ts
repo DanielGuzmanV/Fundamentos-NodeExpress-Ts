@@ -95,14 +95,29 @@ const UsuarioServices = {
   },
 
   // Actualizar informacion basica
-  actualizarDatos: async (id: string | number | undefined, username: string, rol: string) => {
+  actualizarDatos: async (
+    id: string[] | string | undefined, 
+    username: string, 
+    rol: string, 
+    userLogueado?: UserPayload
+  ) => {
+    if(!userLogueado) throw new Error("UNAUTHENTICATED");
+
     const idNum = Number(id);
     if(isNaN(idNum)) throw new Error("NOT_FOUND_ID");
+
+    // logica de autorizacion
+    if(userLogueado.rol !== 'admin' && userLogueado.id !== idNum) {
+      throw new Error("UNAUTHORIZED_ACCESS");
+    }
 
     const userExiste = await UsuarioModel.getById(idNum);
     if(!userExiste) throw new Error("USER_NOT_FOUND");
 
-    return await UsuarioModel.updateInfo(idNum, username, rol)
+    // Regla de negocio: Si no es admin no podra cambiarse su propio rol
+    const rolEdit = userLogueado.rol === 'admin' ? rol: userExiste.rol;
+
+    return await UsuarioModel.updateInfo(idNum, username, rolEdit || 'vendedor');
   },
 
   // Cambiar la contraseña
