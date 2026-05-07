@@ -116,3 +116,25 @@ export const editarUsuario = async (req: Request, res: Response, next: NextFunct
     if(errors) return res.status(errors.status).json({error: errors.msg});
   }
 }
+
+export const eliminarUsuario = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { id, username } = req.params;
+    await UsuarioServices.eliminarUsuario(id, req.user);
+  
+    res.json({
+      mensaje: "Usuario eliminado correctamente",
+      id
+    });
+  } catch (err: any) {
+    const errorMap: Record<string, {status: number, msg: string}> = {
+      "UNAUTHENTICATED": {status: 401, msg: "No has iniciado sesión"},
+      "NOT_FOUND_ID": {status: 400, msg: "El ID proporcionado no es valido"},
+      "USER_NOT_FOUND": {status: 404, msg: "Usuario no encontrado"},
+      "UNAUTHORIZED_ACCESS": {status: 403, msg: "Solo los administradores pueden eliminar usuarios"},
+    }
+
+    const errors = errorMap[err.message];
+    if(errors) return res.status(errors.status).json({error: errors.msg});
+  }
+}
