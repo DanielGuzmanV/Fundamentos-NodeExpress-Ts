@@ -121,9 +121,22 @@ const UsuarioServices = {
   },
 
   // Cambiar la contraseña
-  actualizarPassword: async (id: string | number | undefined, newPassword: string) => {
+  actualizarPassword: async (
+    id: string[] | string | undefined, 
+    newPassword: string,
+    userLogueado: UserPayload
+  ) => {
+    if(!userLogueado) throw new Error("UNAUTHENTICATED");
+
     const idNum = Number(id);
     if(isNaN(idNum)) throw new Error("NOT_FOUND_ID");
+
+    // Logica de autorizacion
+    if(userLogueado.rol !== 'admin' && userLogueado.id !== idNum) {
+      throw new Error("UNAUTHORIZED_ACCESS");
+    }
+
+    if(!newPassword) throw new Error("MISSING_DATA");
 
     const saltRounds = 10;
     const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
