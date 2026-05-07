@@ -92,6 +92,27 @@ export const loginUser = async (req: Request, res: Response, next: NextFunction)
   }
 }
 
-export const obtenerUsuariosAdmin = async (req: Request, res: Response, next: NextFunction) => {
-  
+export const editarUsuario = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { id } = req.params;
+    const { username, rol } = req.body;
+
+    await UsuarioServices.actualizarDatos(id, username, rol, req.user);
+
+    res.json({
+      mensaje: "Usuario actualizado correctamente",
+      id,
+      username
+    });
+  } catch (err: any) {
+    const errorMap: Record<string, {status: number, msg: string}> = {
+      "UNAUTHENTICATED": {status: 401, msg: "No has iniciado sesión"},
+      "NOT_FOUND_ID": {status: 400, msg: "El ID proporcionado no es valido"},
+      "USER_NOT_FOUND": {status: 404, msg: "Usuario no encontrado"},
+      "UNAUTHORIZED_ACCESS": {status: 403, msg: "No tienes permiso para editar este perfil"},
+    }
+
+    const errors = errorMap[err.message];
+    if(errors) return res.status(errors.status).json({error: errors.msg});
+  }
 }
