@@ -54,7 +54,12 @@ db.serialize(() => {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         username TEXT NOT NULL UNIQUE,
         password TEXT NOT NULL,
+        nombre TEXT, 
+        apellido TEXT,
+        email TEXT NULL UNIQUE,
+        telefono TEXT,
         rol TEXT DEFAULT 'vendedor',
+        activo INTEGER DEFAULT 1,
         fecha_creacion DATETIME DEFAULT CURRENT_TIMESTAMP
       )
     `, (err) => {
