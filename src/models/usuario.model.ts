@@ -85,7 +85,7 @@ export const UsuarioModel = {
           nombre = ?,
           apellido = ?,
           telefono = ?,
-          rol = ?,
+          rol = ?
         WHERE id = ? AND activo = 1
       `;
 
