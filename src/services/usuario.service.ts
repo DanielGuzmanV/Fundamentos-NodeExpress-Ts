@@ -32,28 +32,36 @@ const UsuarioServices = {
   registrarUsuario: async (datos: User) => {
     const {username, password, nombre, apellido, email, telefono, rol} = datos;
 
-    // Validacion de negocio
-    if(!username || !password) throw new Error("MISSING_DATA");
+    // Validar que no falten campos obligatorios
+    if(!username || !password || !nombre || !apellido || !email || !telefono) {
+      throw new Error("MISSING_DATA");
+    }
+
+    // Validar formato de email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if(!emailRegex.test(email)) throw new Error("INVALID_EMAIL_FORMAT");
+
+    // Validar telefono (minimo 7-8 digitos, solo numeros)
+    const phoneRegex = /^[0-9]{7,15}$/;
+    if (!phoneRegex.test(telefono)) throw new Error("INVALID_PHONE_FORMAT");
 
     // Validacion si ya existe el nombre del usuario
     const usuarioExistente = await UsuarioModel.getByUsername(username);
     if(usuarioExistente) throw new Error("USER_ALREADY_EXISTS");
 
+    // Validacion si ya existe el email
+    const emailExistente = await UsuarioModel.getByEmail(email);
+    if (emailExistente) throw new Error("EMAIL_ALREADY_EXISTS");
+
     // Encriptar la contraseña antes de enviarla
     const saltRounds = 10;
     const hashedPassword = await bcrypt.hash(password, saltRounds);
 
-    const dataRegister: User = {
-      username: username,
+    const resultado = await UsuarioModel.create({
+      ...datos,
       password: hashedPassword,
-      nombre: nombre,
-      apellido: apellido,
-      email: email,
-      telefono: telefono,
       rol: rol || 'vendedor'
-    }
-
-    const resultado = await UsuarioModel.create(dataRegister)
+    })
 
     // Retornar la informacion del usuario creado
     return {
