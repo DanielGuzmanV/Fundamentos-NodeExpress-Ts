@@ -64,9 +64,15 @@ export const UsuarioModel = {
     })
   },
 
-  // Buscar usuario por el email
-  getByEmail: async () => {
-    // Se agregara luego...
+  // Buscar usuario por el email (para validaciones)
+  getByEmail: async (email: string): Promise<User | undefined> => {
+    return new Promise((resolve, reject) => {
+    const sql = "SELECT * FROM usuarios WHERE email = ? AND activo = 1";
+    db.get(sql, [email], (err, row) => {
+      if(err) return reject(err);
+      resolve(row as User | undefined);
+    });
+  });
   },
 
   // Obtener un usuario por el ID si esta activo o no
