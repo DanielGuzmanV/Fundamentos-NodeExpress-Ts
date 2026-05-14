@@ -52,14 +52,16 @@ export const registrarUser = async (req: Request, res: Response, next: NextFunct
       usuario: usuarioNuevo
     })
   } catch (err: any) {
-    if(err.message == "MISSING_DATA") {
-      return res.status(400).json({ error: "Username y password son obligatorios" });
+    const errorMap: Record<string, {status: number, msg: string}> = {
+      "MISSING_DATA": {status: 400, msg: "Todos los datos son obligatorios"},
+      "INVALID_EMAIL_FORMAT": {status: 400, msg: "Formato del email invalido"},
+      "INVALID_PHONE_FORMAT": {status: 400, msg: "Formato del numero celular"},
+      "USER_ALREADY_EXISTS": {status: 400, msg: "El nombre de usuario ya existe"},
+      "EMAIL_ALREADY_EXISTS": {status: 400, msg: "El email del usuario ya existe"},
     }
 
-    if(err.message === "USER_ALREADY_EXISTS") {
-      return res.status(400).json({ error: "El nombre de usuario ya existe" });
-    }
-
+    const errors = errorMap[err.message];
+    if(errors) return res.status(errors.status).json({ error: errors.msg });
     next(err);
   }
 }
