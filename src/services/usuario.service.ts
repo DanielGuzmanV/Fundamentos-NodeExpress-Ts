@@ -30,7 +30,7 @@ const UsuarioServices = {
 
   // Registrar un nuevo usuario:
   registrarUsuario: async (datos: User) => {
-    const {username, password, rol} = datos;
+    const {username, password, nombre, apellido, email, telefono, rol} = datos;
 
     // Validacion de negocio
     if(!username || !password) throw new Error("MISSING_DATA");
@@ -43,11 +43,17 @@ const UsuarioServices = {
     const saltRounds = 10;
     const hashedPassword = await bcrypt.hash(password, saltRounds);
 
-    const resultado = await UsuarioModel.create({
-      username, 
-      password: hashedPassword, 
+    const dataRegister: User = {
+      username: username,
+      password: hashedPassword,
+      nombre: nombre,
+      apellido: apellido,
+      email: email,
+      telefono: telefono,
       rol: rol || 'vendedor'
-    })
+    }
+
+    const resultado = await UsuarioModel.create(dataRegister)
 
     // Retornar la informacion del usuario creado
     return {
@@ -97,8 +103,7 @@ const UsuarioServices = {
   // Actualizar informacion basica
   actualizarDatos: async (
     id: string[] | string | undefined, 
-    username: string, 
-    rol: string, 
+    datosUpdate: User,
     userLogueado?: UserPayload
   ) => {
     if(!userLogueado) throw new Error("UNAUTHENTICATED");
@@ -115,9 +120,20 @@ const UsuarioServices = {
     if(!userExiste) throw new Error("USER_NOT_FOUND");
 
     // Regla de negocio: Si no es admin no podra cambiarse su propio rol
-    const rolEdit = userLogueado.rol === 'admin' ? rol: userExiste.rol;
+    const rolEdit = userLogueado.rol === 'admin' 
+      ? (datosUpdate.rol || userExiste.rol) 
+      : userExiste.rol;
+      
+     // Construir objeto con datos válidos
+    const datosModelo = {
+      username: datosUpdate.username || userExiste.username,
+      nombre: datosUpdate.nombre || userExiste.nombre,
+      apellido: datosUpdate.apellido || userExiste.apellido,
+      telefono: datosUpdate.telefono || userExiste.telefono,
+      rol: rolEdit || 'vendedor'
+    };
 
-    return await UsuarioModel.updateInfo(idNum, username, rolEdit || 'vendedor');
+    return await UsuarioModel.updateInfo(idNum, datosModelo);
   },
 
   // Cambiar la contraseña
