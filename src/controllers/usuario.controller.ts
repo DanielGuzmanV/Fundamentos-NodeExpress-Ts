@@ -43,11 +43,9 @@ export const obtenerUsuarioId = async (req: Request, res: Response, next: NextFu
 // Controller para registrar un nuevo usuario
 export const registrarUser = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const {username, password, rol} = req.body;
+    const dataUser = req.body;
 
-    const usuarioNuevo = await UsuarioServices.registrarUsuario({
-      username, password, rol
-    });
+    const usuarioNuevo = await UsuarioServices.registrarUsuario(dataUser);
 
     res.status(201).json({
       mensaje: "Usuario registrado con exito",
@@ -69,9 +67,9 @@ export const registrarUser = async (req: Request, res: Response, next: NextFunct
 // Controller para iniciar sesion:
 export const loginUser = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const {username, password} = req.body;
+    const dataUser = req.body;
 
-    const resultadoUser = await UsuarioServices.loginUsuario({username, password});
+    const resultadoUser = await UsuarioServices.loginUsuario(dataUser);
 
     res.status(200).json({
       mensaje: "Login exitoso",
@@ -95,14 +93,13 @@ export const loginUser = async (req: Request, res: Response, next: NextFunction)
 export const editarUsuario = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
-    const { username, rol } = req.body;
+    const  dataUser  = req.body;
 
-    await UsuarioServices.actualizarDatos(id, username, rol, req.user);
+    await UsuarioServices.actualizarDatos(id, dataUser, req.user);
 
     res.json({
       mensaje: "Usuario actualizado correctamente",
       id,
-      username
     });
   } catch (err: any) {
     const errorMap: Record<string, {status: number, msg: string}> = {
