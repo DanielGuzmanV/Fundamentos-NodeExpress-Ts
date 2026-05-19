@@ -168,6 +168,24 @@ const UsuarioServices = {
     return await UsuarioModel.updatePassword(idNum, hashedPassword);
   },
 
+  // Eliminar/ocultar usuario
+  ocultarUsuario: async (id: string[] | string | undefined, userLogueado?: UserPayload) => {
+    if(!userLogueado || userLogueado.rol !== 'admin') {
+      throw new Error("UNAUTHORIZED_ACCESS");
+    }
+
+    const idNum = Number(id);
+    if(isNaN(idNum)) throw new Error("NOT_FOUND_ID");
+
+    const userExiste = await UsuarioModel.getById(idNum);
+    if(!userExiste) throw new Error("USER_NOT_FOUND");
+
+    // Evitar que un admin se oculte asi mismo
+    if(userLogueado.id === idNum) throw new Error("CANNOT_DELETE_SELF");
+
+    return await UsuarioModel.softDelete(idNum);
+  },
+
   // Eliminar un usuario
   eliminarUsuario: async (id: string[] | string | undefined, userLogueado?: UserPayload) => {
     if(!userLogueado) throw new Error("UNAUTHENTICATED");
