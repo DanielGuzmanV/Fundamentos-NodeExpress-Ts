@@ -4,6 +4,7 @@ import {
   editarUsuario, 
   eliminarUsuario, 
   loginUser, 
+  mostrarUsuario, 
   obtenerUsuarioId, 
   obtenerUsuarios, 
   ocultarUsuario, 
@@ -32,6 +33,9 @@ router.put('/:id', authenticateToken, editarUsuario);
 
 // PATCH: /auth/:id/password = Actualizar constraseña
 router.patch('/:id/password', authenticateToken, actualizarPassword);
+
+// PATCH: /auth/:id/activar = Reactivar un usuario oculto (solo puede el admin)
+router.patch("/:id/active", authenticateToken, authorizeRole('admin'), mostrarUsuario)
 
 // DELETE: /auth/:id = Eliminar/ocultar un usuario (soft delete)
 router.delete('/:id', authenticateToken, authorizeRole('admin'), ocultarUsuario);
