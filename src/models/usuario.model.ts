@@ -125,8 +125,15 @@ export const UsuarioModel = {
   },
 
   // Eliminar (ocultar un usuario) por el ID
-  softDelete: async () => {
-    // Se agregara luego...
+  softDelete: async (id: number): Promise<void> => {
+    return new Promise((resolve, reject) => {
+      const sql = "UPDATE usuarios SET activo = 0 WHERE id = ? AND activo = 1";
+
+      db.run(sql, [id], function(err) {
+        if(err) return reject(err);
+        resolve();
+      })
+    })
   },
 
   // Mostrar nuevamente un usuario ocultado
