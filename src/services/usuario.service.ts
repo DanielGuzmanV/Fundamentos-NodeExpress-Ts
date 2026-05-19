@@ -168,6 +168,22 @@ const UsuarioServices = {
     return await UsuarioModel.updatePassword(idNum, hashedPassword);
   },
 
+  activarUsuario: async (id: string[] | string | undefined, userLogueado?: UserPayload) => {
+    if(!userLogueado || userLogueado.rol !== 'admin') {
+      throw new Error("UNAUTHORIZED_ACCESS");
+    }
+
+    const idNum = Number(id);
+    if(isNaN(idNum)) throw new Error("NOT_FOUND_ID");
+
+    const userExist = await UsuarioModel.getByIdNoFilter(idNum);
+    if(!userExist) throw new Error("USER_NOT_FOUND");
+
+    if(userExist.activo === 1) throw new Error("USER_ALREADY_ACTIVE");
+    
+    return await UsuarioModel.showUser(idNum);
+  },
+
   // Eliminar/ocultar usuario
   ocultarUsuario: async (id: string[] | string | undefined, userLogueado?: UserPayload) => {
     if(!userLogueado || userLogueado.rol !== 'admin') {
