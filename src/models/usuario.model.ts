@@ -76,9 +76,15 @@ export const UsuarioModel = {
   },
 
   // Obtener un usuario por el ID si esta activo o no
-  getByIdNoFilter: async () => {
-    // Se agregara luego...
-  },
+  getByIdNoFilter: async (id: number): Promise<User | undefined> => {
+  return new Promise((resolve, reject) => {
+    const sql = "SELECT * FROM usuarios WHERE id = ?";
+    db.get(sql, [id], (err, row) => {
+      if(err) return reject(err);
+      resolve(row as User | undefined);
+    });
+  });
+},
 
   // Actualizar todos los datos generales
   updateInfo: async (id: number, datos: Partial<User>): Promise<void> => {
@@ -137,8 +143,15 @@ export const UsuarioModel = {
   },
 
   // Mostrar nuevamente un usuario ocultado
-  showUser: async () => {
-    // Se agregara luego...
+  showUser: async (id: number): Promise<void> => {
+    return new Promise((resolve, reject) => {
+      const sql = "UPDATE usuarios SET activo = 1 WHERE id = ? AND activo = 0";
+
+      db.run(sql, [id], function(err) {
+        if(err) return reject(err);
+        resolve();
+      })
+    })
   },
   
   // Eliminar un usuario por el ID
