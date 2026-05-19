@@ -6,6 +6,7 @@ import {
   loginUser, 
   obtenerUsuarioId, 
   obtenerUsuarios, 
+  ocultarUsuario, 
   registrarUser 
 } from "../controllers/usuario.controller.js";
 import { authenticateToken } from "../middlewares/auth.middleware.js";
@@ -29,10 +30,14 @@ router.post('/login', loginUser);
 // PUT: /auth/:id = Editar un usuario si esta logeado
 router.put('/:id', authenticateToken, editarUsuario);
 
-// DELETE /auth/:id = Eliminar usuarios, solo el admin puede realizarlo
-router.delete('/:id', authenticateToken, authorizeRole('admin'), eliminarUsuario);
-
 // PATCH: /auth/:id/password = Actualizar constraseña
 router.patch('/:id/password', authenticateToken, actualizarPassword);
+
+// DELETE: /auth/:id = Eliminar/ocultar un usuario (soft delete)
+router.delete('/:id', authenticateToken, authorizeRole('admin'), ocultarUsuario);
+
+// DELETE /auth/:id = Eliminar usuarios, solo el admin puede realizarlo
+router.delete('/:id/delete', authenticateToken, authorizeRole('admin'), eliminarUsuario);
+
 
 export default router;
