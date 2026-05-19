@@ -144,6 +144,32 @@ export const actualizarPassword = async (req: Request, res: Response, next: Next
   }
 }
 
+export const mostrarUsuario = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const {id} = req.params;
+    await UsuarioServices.activarUsuario(id, req.user);
+
+    res.json({
+      mensaje: "Usuario activado en la DB correctamente",
+      id_user: id
+    })
+
+  } catch (err: any) {
+    const errorMap: Record<string, {status: number, msg: string}> = {
+      "USER_ALREADY_ACTIVE": {status: 401, msg: "El usuario ya esta activo"},
+      "NOT_FOUND_ID": {status: 400, msg: "El ID proporcionado no es valido"},
+      "USER_NOT_FOUND": {status: 404, msg: "Usuario no encontrado"},
+      "UNAUTHORIZED_ACCESS": {status: 403, msg: "Solo los administradores pueden eliminar usuarios"},
+    }
+
+    const errors = errorMap[err.message];
+    if(errors) return res.status(errors.status).json({error: errors.msg});
+
+    next(err);
+
+  }
+}
+
 export const ocultarUsuario = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const {id} = req.params;
