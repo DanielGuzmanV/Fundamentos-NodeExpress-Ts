@@ -144,6 +144,35 @@ const UsuarioServices = {
     return await UsuarioModel.updateInfo(idNum, datosModelo);
   },
 
+  actualizarParcial: async (
+    id: string[] | string | undefined,
+    datosUpdate: Partial<User>,
+    userLogueado?: UserPayload
+  ) => {
+    if(!userLogueado) throw new Error("UNAUTHENTICATED");
+
+    const idNum = Number(id);
+    if(isNaN(idNum)) throw new Error("NOT_FOUND_ID");
+
+    if(userLogueado.rol !== 'admin' && userLogueado.id !== idNum) {
+      throw new Error("UNAUTHORIZED_ACCESS");
+    }
+
+    if(userLogueado.rol !== 'admin' && datosUpdate.rol) {
+      delete datosUpdate.rol;
+    }
+
+    // Eliminamos password y email por si el cliente los envió por error
+    delete datosUpdate.password;
+    delete datosUpdate.email;
+
+    const userExiste = await UsuarioModel.getById(idNum);
+    if(!userExiste) throw new Error("USER_NOT_FOUND");
+
+    return await UsuarioModel.updatePartial(idNum, datosUpdate);
+
+  },
+
   // Cambiar la contraseña
   actualizarPassword: async (
     id: string[] | string | undefined, 

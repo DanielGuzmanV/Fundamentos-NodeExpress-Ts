@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import UsuarioServices from "../services/usuario.service.js";
+import UsuarioModel from "../models/usuario.model.js";
 
 // Controller para obtener todos los usuarios
 export const obtenerUsuarios = async (req: Request, res: Response, next: NextFunction) => {
@@ -103,6 +104,33 @@ export const editarUsuario = async (req: Request, res: Response, next: NextFunct
       mensaje: "Usuario actualizado correctamente",
       id,
     });
+  } catch (err: any) {
+    const errorMap: Record<string, {status: number, msg: string}> = {
+      "UNAUTHENTICATED": {status: 401, msg: "No has iniciado sesión"},
+      "NOT_FOUND_ID": {status: 400, msg: "El ID proporcionado no es valido"},
+      "USER_NOT_FOUND": {status: 404, msg: "Usuario no encontrado"},
+      "UNAUTHORIZED_ACCESS": {status: 403, msg: "No tienes permiso para editar este perfil"},
+    }
+
+    const errors = errorMap[err.message];
+    if(errors) return res.status(errors.status).json({error: errors.msg});
+
+    next(err);
+  }
+}
+
+export const editarParcial = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const {id} = req.params;
+    const datosUpdate = req.body;
+
+    await UsuarioServices.actualizarParcial(id, datosUpdate, req.user);
+
+    res.json({
+      mensaje: "Perfil actualizado parcialmente",
+      campos_cambiados: Object.keys(datosUpdate)
+    })
+
   } catch (err: any) {
     const errorMap: Record<string, {status: number, msg: string}> = {
       "UNAUTHENTICATED": {status: 401, msg: "No has iniciado sesión"},

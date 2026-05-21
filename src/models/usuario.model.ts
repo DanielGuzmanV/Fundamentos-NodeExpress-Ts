@@ -109,8 +109,30 @@ export const UsuarioModel = {
   },
 
   // Actualizar algunos datos
-  updatePartial: async () => {
-    // Se agregara luego...
+  updatePartial: async (id: number, datos: Partial<User>): Promise<void> => {
+    const { username, nombre, apellido, telefono, rol} = datos;
+    const camposFiltrados: Record<string, any> = { username, nombre, apellido, telefono, rol };
+
+    // Filtrar los campos que son undefined
+    const keys = Object.keys(camposFiltrados).filter(
+      (key) => camposFiltrados[key as keyof User] !== undefined
+    );
+
+    if(keys.length === 0) return;
+
+    // Construimos el sql dinamico
+    const setClause = keys.map((key) => `${key} = ?`).join(", ");
+    const values = keys.map((key) => camposFiltrados[key as keyof User]);
+    values.push(id);
+
+    return new Promise((resolve, reject) => {
+      const sql = `UPDATE usuarios SET ${setClause} WHERE id = ? AND activo = 1`;
+
+      db.run(sql, values, function(err) {
+        if(err) return reject(err);
+        resolve();
+      })
+    });
   },
 
   // Actualizar el email del usuario
