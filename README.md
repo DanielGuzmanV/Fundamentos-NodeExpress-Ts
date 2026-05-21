@@ -28,25 +28,25 @@ Se configuró el proyecto como **ES Modules** (`"type": "module"` en `package.js
 *Ejemplo:* `import db from './config/database.js';`
 
 ### 2. Ejecución en Desarrollo
-Se reemplazó `ts-node-dev` por **`tsx`** debido a su mejor compatibilidad con ESM y mayor velocidad.
+Se reemplazó `ts-node-dev` por **`tsx`** debido a su mejor compatibilidad con ESM y mayor velocidad. Se utiliza el gestor **pnpm** por su rapidez y gestión eficiente de `node_modules`.
 
 ## Comandos Principales
 
 1. **Instalar dependencias:**
    ```bash
-   npm install
+   pnpm install
 
 2. **Ejecutar en modo desarrollo:**
    ```bash
-   npm run dev
+   pnpm run dev
 
 3. **Compilar a JavaScript (Producción):**
    ```bash
-   npm run build
+   pnpm run build
 
 4. **Iniciar en producción:**
    ```bash
-   npm start
+   pnpm start
 
 
 
