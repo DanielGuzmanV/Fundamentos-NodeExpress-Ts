@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { 
   actualizarPassword,
+  editarParcial,
   editarUsuario, 
   eliminarUsuario, 
   loginUser, 
@@ -30,6 +31,9 @@ router.post('/login', loginUser);
 
 // PUT: /auth/:id = Editar un usuario si esta logeado
 router.put('/:id', authenticateToken, editarUsuario);
+
+// PATCH: /auth/:id = Actualizacion parcial de datos
+router.patch('/:id', authenticateToken, editarParcial)
 
 // PATCH: /auth/:id/password = Actualizar constraseña
 router.patch('/:id/password', authenticateToken, actualizarPassword);
