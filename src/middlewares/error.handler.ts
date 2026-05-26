@@ -5,7 +5,7 @@ export const errorHandler = (err: any, req: Request, res: Response, next: NextFu
   console.error(err.stack);
 
   const status = err.status || 500;
-  const message = err.menssage || "Error interno del servidor";
+  const message = err.message || "Error interno del servidor";
 
   res.status(status).json({
     error: true,
