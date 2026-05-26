@@ -2,6 +2,8 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import UsuarioModel from "../models/usuario.model.js";
 import { User, UserPayload } from "../types/user.js";
+import { updatePasswordSchema } from "../schemas/user.schema.js";
+import { ZodError } from "zod";
 
 const UsuarioServices = {
 
@@ -176,7 +178,7 @@ const UsuarioServices = {
   // Cambiar la contraseña
   actualizarPassword: async (
     id: string[] | string | undefined, 
-    newPassword: string,
+    passwords: {oldPassword: string, newPassword: string},
     userLogueado: UserPayload
   ) => {
     if(!userLogueado) throw new Error("UNAUTHENTICATED");
@@ -189,10 +191,31 @@ const UsuarioServices = {
       throw new Error("UNAUTHORIZED_ACCESS");
     }
 
-    if(!newPassword) throw new Error("MISSING_DATA");
+    // Nueva validacion de las contraseñas con Zod
+    try {
+      updatePasswordSchema.parse(passwords); // Aquí se intenta validar con Zod
+    } catch (error: unknown) { // El error aquí debería ser ZodError
+      if (error instanceof ZodError) {
+        const errorMssage = error.issues.length > 0
+          ? error.issues[0]?.message
+          : "Error desconocido en la validación de la contraseña.";
+        throw new Error(`VALIDATION_ERROR: ${errorMssage}`);
+      } else {
+        // En caso de que ZodError no tenga la estructura esperada o sea otro tipo de error
+        throw new Error(`VALIDATION_ERROR: Error inesperado durante la validación de la contraseña.`);
+      }
+    }
+
+    // Obtener el usuario para verificar la contraseña actual
+    const usuario = await UsuarioModel.getByIdWithPassword(idNum);
+    if(!usuario) throw new Error("USER_NOT_FOUND");
+
+    // Comparar la contraseña antigua enviada con el hash guardado
+    const coincide = await bcrypt.compare(passwords.oldPassword, usuario.password);
+    if(!coincide) throw new Error("INVALID_OLD_PASSWORD");
 
     const saltRounds = 10;
-    const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
+    const hashedPassword = await bcrypt.hash(passwords.newPassword, saltRounds);
 
     return await UsuarioModel.updatePassword(idNum, hashedPassword);
   },
