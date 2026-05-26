@@ -9,7 +9,7 @@ import {
   vaciarTablaCat
 } from "../controllers/categoria.controller.js";
 
-const router = Router();
+const router: Router = Router();
 
 // Endpoint para vaciar toda la tabla de categoria
 router.delete('/delete', vaciarTablaCat);

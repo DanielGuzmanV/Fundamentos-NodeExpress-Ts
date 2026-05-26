@@ -12,7 +12,7 @@ import {
 } from "../controllers/producto.controller.js";
 import validarProducto from "../middlewares/producto.validator.js";
 
-const router = Router();
+const router: Router = Router();
 
 // GET /productos = obtener todos los productos, incluyendo el precio minimo o nombre
 // Formas de llamarlo: 

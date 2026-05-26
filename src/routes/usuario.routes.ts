@@ -14,7 +14,7 @@ import {
 import { authenticateToken } from "../middlewares/auth.middleware.js";
 import { authorizeRole } from "../middlewares/rol.middleware.js";
 
-const router = Router();
+const router: Router = Router();
 
 // Rutas:
 // GET: /auth/usuarios = Solo el adming puede obtener todos los usuarios
