@@ -64,6 +64,17 @@ export const UsuarioModel = {
     })
   },
 
+  // Obtener un usuario por el ID incluyendo la contraseña
+  getByIdWithPassword: async (id: number): Promise<User | undefined> => {
+    return new Promise((resolve, reject) => {
+      const sql = `SELECT * FROM usuarios WHERE id = ? AND activo = 1`;
+      db.get(sql, [id], (err, row) => {
+        if(err) return reject(err);
+        resolve(row as User | undefined);
+      })
+    })
+  },
+
   // Buscar usuario por el email (para validaciones)
   getByEmail: async (email: string): Promise<User | undefined> => {
     return new Promise((resolve, reject) => {
