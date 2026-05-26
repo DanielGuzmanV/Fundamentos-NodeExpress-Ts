@@ -149,9 +149,9 @@ export const editarParcial = async (req: Request, res: Response, next: NextFunct
 export const actualizarPassword = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const {id} = req.params;
-    const {newPassword} = req.body;
+    const {oldPassword, newPassword} = req.body;
 
-    await UsuarioServices.actualizarPassword(id, newPassword, req.user!);
+    await UsuarioServices.actualizarPassword(id, {oldPassword, newPassword}, req.user!);
 
     res.json({
       mensaje: "Contraseña actualizada correctamente",
@@ -161,8 +161,16 @@ export const actualizarPassword = async (req: Request, res: Response, next: Next
     const errorMap: Record<string, {status: number, msg: string}> = {
       "UNAUTHENTICATED": {status: 401, msg: "No has iniciado sesión"},
       "NOT_FOUND_ID": {status: 400, msg: "El ID proporcionado no es valido"},
-      "MISSING_DATA": {status: 400, msg: "La nueva contraseña es obligatoria"},
+      "USER_NOT_FOUND": {status: 404, msg: "Usuario no encontrado"},
       "UNAUTHORIZED_ACCESS": {status: 403, msg: "No tienes permiso para cambiar esta contraseña"},
+      "VALIDATION_ERROR": {status: 400, msg: "Error de validación: La nueva contraseña no cumple los requisitos"}, // Error Zod
+      "INVALID_OLD_PASSWORD": {status: 401, msg: "La contraseña actual es incorrecta"}, // Nuevo error
+    }
+
+    // Manejo de errores específicos de Zod o personalizados
+    if (err.message.startsWith("VALIDATION_ERROR:")) {
+      const zodMsg = err.message.substring("VALIDATION_ERROR: ".length);
+      return res.status(400).json({ error: zodMsg });
     }
 
     const errors = errorMap[err.message];
