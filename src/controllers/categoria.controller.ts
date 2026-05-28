@@ -1,5 +1,4 @@
 import { Request, Response, NextFunction } from "express";
-import CategoriaModel from "../models/categoria.model.js";
 import CategoriaService from "../services/categoria.service.js";
 
 // Consulta 1: obtener todas las categorias
@@ -18,6 +17,20 @@ export const obtenerCategorias = async (req: Request, res: Response, next: NextF
   }
 };
 
+export const obtenerUnaCat = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const {id} = req.params;
+    const categoria = await CategoriaService.ObtenerUnCategoria(id);
+
+    res.status(200).json({
+      mensaje: "Categoria encontrada",
+      categoria: categoria
+    })
+  } catch (err: any) {
+    next(err);
+  }
+}
+
 // Consulta 2: Crear una nueva categoria
 export const crearCategoria = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -31,9 +44,6 @@ export const crearCategoria = async (req: Request, res: Response, next: NextFunc
   } catch (err: any) {
     if(err.message.includes("UNIQUE")) {
       return res.status(400).json({ error: "Error al crear o categoria duplicada"});
-    }
-    if(err.message === "NOT_NAME") {
-      return res.status(400).json({error: "El nombre es obligatorio"})
     }
     next(err);
   }
@@ -53,15 +63,6 @@ export const actualizarCategoria = async(req: Request, res: Response, next: Next
     })
 
   } catch (err: any) {
-    if(err.message === "NOT_FOUND_ID") {
-      return res.status(404).json({error: "ID no valido"})
-    }
-    if(err.message === "NOT_NAME") {
-      return res.status(400).json({error: "El nuevo nombre es obligatorio"})
-    }
-    if(err.message === "CATEGORIA_NOT_FOUND") {
-      return res.status(404).json({error: "No se encontro la categoria con ese ID"})
-    }
     next(err);
   }
 }
@@ -78,12 +79,6 @@ export const ocultarCategoria = async(req: Request, res: Response, next: NextFun
     })
 
   } catch (err: any) {
-    if(err.message === "NOT_FOUND_ID") {
-      return res.status(404).json({error: "ID no valido"})
-    }
-    if(err.message === "CATEGORIA_NOT_FOUND") {
-      return res.status(400).json({error: "La categoria no existe o ya esta oculta"});
-    }
     next(err);
   }
 }
@@ -100,12 +95,6 @@ export const mostrarCategoria = async(req: Request, res: Response, next: NextFun
     })
 
   } catch (err: any) {
-    if(err.message === "NOT_FOUND_ID") {
-      return res.status(404).json({error: "ID no valido"})
-    }
-    if(err.message === "CATEGORIA_NOT_FOUND") {
-      return res.status(400).json({error: "La categoria ya esta activa o no existe"});
-    }
     next(err);
   }
 }
@@ -125,12 +114,7 @@ export const eliminarCategoria = async (req: Request, res: Response, next: NextF
         error: "No puedes eliminarla, tiene productos asociados. Prueba ocultándola."
       })
     }
-    if(err.message == "NOT_FOUND_ID") {
-      return res.status(404).json({error: "ID no valido"});
-    }
-    if(err.message === "CATEGORIA_NOT_FOUND") {
-      return res.status(404).json({error: "No se encontro la categoria para eliminar"});
-    }
+    next();
   }
 }
 
@@ -140,9 +124,6 @@ export const vaciarTablaCat = async (req: Request, res: Response, next: NextFunc
     await CategoriaService.eliminarTablaCat();
     res.json({mensaje: "Se han eliminado todas las categorias"});
   } catch (err: any) {
-    if(err.message === "NO_CATEGORIAS_FOUND") {
-      return res.status(404).json({error: "No se encontraron categorias para eliminar"})
-    }
     next(err);
   }
 }

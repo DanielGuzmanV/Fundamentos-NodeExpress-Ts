@@ -6,7 +6,8 @@ import {
   ocultarCategoria, 
   mostrarCategoria,
   eliminarCategoria,
-  vaciarTablaCat
+  vaciarTablaCat,
+  obtenerUnaCat
 } from "../controllers/categoria.controller.js";
 
 const router: Router = Router();
@@ -16,6 +17,9 @@ router.delete('/delete', vaciarTablaCat);
 
 // Endpoint para obtener todas las categorias
 router.get('/', obtenerCategorias);
+
+// Endpoint para obtener una categoria
+router.get('/:id', obtenerUnaCat);
 
 // Endpoint para crear una nueva categoria
 router.post('/', crearCategoria);
