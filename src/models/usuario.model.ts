@@ -147,8 +147,15 @@ export const UsuarioModel = {
   },
 
   // Actualizar el email del usuario
-  updateEmail: async () => {
-    // Se agregara luego...
+  updateEmail: async (id: number, newEmail: string): Promise<void> => {
+    return new Promise((resolve, reject) => {
+      const sql = "UPDATE usuarios SET email = ? WHERE id = ? AND activo = 1";
+
+      db.run(sql, [newEmail, id], function(err) {
+        if(err) return reject(err);
+        resolve();
+      })
+    })
   },
 
   // Actualizar solo la contraseña 

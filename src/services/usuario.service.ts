@@ -2,8 +2,8 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import UsuarioModel from "../models/usuario.model.js";
 import { User, UserPayload } from "../types/user.js";
-import { updatePasswordSchema } from "../schemas/user.schema.js";
-import { ZodError } from "zod";
+import { updateEmailSchema, updatePasswordSchema } from "../schemas/user.schema.js";
+import { email, ZodError } from "zod";
 
 const UsuarioServices = {
 
@@ -218,6 +218,50 @@ const UsuarioServices = {
     const hashedPassword = await bcrypt.hash(passwords.newPassword, saltRounds);
 
     return await UsuarioModel.updatePassword(idNum, hashedPassword);
+  },
+
+  // Actualizar el email de un usuario
+  actualizarEmail: async (
+    id: string[] | string | undefined,
+    newEmail: string,
+    userLogueado: UserPayload
+  ) => {
+    if(!userLogueado) throw new Error("UNAUTHENTICATED");
+
+    const idNum = Number(id);
+    if(isNaN(idNum)) throw new Error("NOT_FOUND_ID");
+
+    if(userLogueado.rol !== 'admin' && userLogueado.id !== idNum) {
+      throw new Error("UNAUTHORIZED_ACCESS");
+    }
+
+    // Verificar el formato del nuevo email con zod
+    try {
+      updateEmailSchema.parse({email: newEmail});
+    } catch (error: unknown) {
+      if(error instanceof ZodError) {
+        const errorMessage = error.issues.length > 0
+          ? error.issues[0]?.message
+          : "Error desconocido en la validacion del email";
+        throw new Error(`VALIDATION_ERROR: ${errorMessage}`);
+      } else {
+        throw new Error("VALIDATION_ERROR: error inesperado durante la validacion del email");
+      }
+    }
+
+    // Obtener el usuario actual para verificar si el email es el mismo
+    const usuarioActual = await UsuarioModel.getById(idNum);
+    if(!usuarioActual) throw new Error("USER_NOT_FOUND");
+
+    // Si el email es el mismo al nuevo no se hace nada
+    const emailExistente = await UsuarioModel.getByEmail(newEmail);
+    if(emailExistente && emailExistente.id !== idNum) {
+      throw new Error("EMAIL_ALREADY_EXISTS");
+    }
+
+    await UsuarioModel.updateEmail(idNum, newEmail);
+
+    return {message: "Email actualizado correctamente"};
   },
 
   activarUsuario: async (id: string[] | string | undefined, userLogueado?: UserPayload) => {
