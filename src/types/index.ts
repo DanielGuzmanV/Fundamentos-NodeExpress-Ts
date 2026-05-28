@@ -1,6 +1,7 @@
 export interface Categoria {
   id?: number;
   nombre: string;
+  activo: number;
 }
 
 export interface Producto {
