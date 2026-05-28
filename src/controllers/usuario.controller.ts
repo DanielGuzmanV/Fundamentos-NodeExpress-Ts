@@ -180,6 +180,39 @@ export const actualizarPassword = async (req: Request, res: Response, next: Next
   }
 }
 
+export const actualizarEmail = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const {id} = req.params;
+    const {email} = req.body;
+
+    const resultado = await UsuarioServices.actualizarEmail(id, email, req.user!);
+
+    res.json({
+      mensaje: resultado.message,
+      id,
+    })
+  } catch (err: any) {
+    const errorMap: Record<string, {status: number, msg: string}> = {
+      "UNAUTHENTICATED": {status: 401, msg: "No has iniciado sesión"},
+      "NOT_FOUND_ID": {status: 400, msg: "El ID proporcionado no es valido"},
+      "USER_NOT_FOUND": {status: 404, msg: "Usuario no encontrado"},
+      "UNAUTHORIZED_ACCESS": {status: 403, msg: "No tienes permiso para actualizar este email"},
+      "VALIDATION_ERROR": {status: 400, msg: "Error de validación del email"}, // Zod
+      "EMAIL_ALREADY_EXISTS": {status: 400, msg: "El nuevo email ya está en uso por otro usuario"},
+    }
+
+    if(err.message.startsWith("VALIDATION_ERROR")) {
+      const zodMsg = err.message.substring("VALIDATION_ERROR:".length);
+      return res.status(400).json({error: zodMsg});
+    }
+
+    const errors = errorMap[err.message];
+    if(errors) return res.status(errors.status).json({error: errors.msg});
+
+    next();
+  }
+}
+
 export const mostrarUsuario = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const {id} = req.params;

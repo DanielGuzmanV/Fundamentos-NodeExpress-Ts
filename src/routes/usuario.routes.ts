@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { 
+  actualizarEmail,
   actualizarPassword,
   editarParcial,
   editarUsuario, 
@@ -37,6 +38,9 @@ router.patch('/:id', authenticateToken, editarParcial)
 
 // PATCH: /auth/:id/password = Actualizar constraseña
 router.patch('/:id/password', authenticateToken, actualizarPassword);
+
+// PATCH: /auth/:id/email = Actualizar el email
+router.patch('/:id/email', authenticateToken, actualizarEmail)
 
 // PATCH: /auth/:id/activar = Reactivar un usuario oculto (solo puede el admin)
 router.patch("/:id/active", authenticateToken, authorizeRole('admin'), mostrarUsuario)
