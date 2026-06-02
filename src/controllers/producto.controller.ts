@@ -16,30 +16,6 @@ export const obtenerProductos = async (req: Request, res: Response, next: NextFu
     })
 
   } catch (err: any) {
-    if(err.message === "NOT_PRODUCTS") {
-      return res.status(404).json({
-        error: "No se encontraron productos",
-        formato_producto: {
-          nombre: "string",
-          precio: "number",
-          stock: "number",
-          categoria_id: "number",
-        }
-      })
-    }
-
-    const errorMap: Record<string, {status: number, msg: string}> = {
-      "INVALID_PRICE_FORMAT": { status: 400, msg: "El precio mínimo debe ser un número válido." },
-      "NEGATIVE_PRICE":       { status: 400, msg: "El precio no puede ser negativo." },
-      "INVALID_PAGE":         { status: 400, msg: "La página debe ser un número mayor a 0." },
-      "INVALID_LIMIT":        { status: 400, msg: "El límite debe ser un número positivo." },
-      "LIMIT_TOO_HIGH":       { status: 400, msg: "No puedes solicitar más de 50 productos por página." },
-      "INVALID_ORDER_TYPE":   { status: 400, msg: "El tipo de orden no es válido. Usa: caro, barato o nombre." },
-      "EMPTY_NAME_FILTER":    { status: 400, msg: "El nombre no puede estar vacio" },
-      "NAME_FILTER_TOO_LONG": { status: 400, msg: "El nombre es demasiado largo" },
-    }
-    const error = errorMap[err.message];
-    if(error) return res.status(error.status).json({error: error.msg})
     next(err);
   }
 };
@@ -56,12 +32,6 @@ export const productoID = async (req: Request, res: Response, next: NextFunction
     });
 
   } catch (err: any) {
-    if(err.message === "NOT_FOUND_ID") {
-      return res.status(400).json({error: "ID no valido"})
-    }
-    if(err.message === "NOT_FOUND_PRODUCT") {
-      return res.status(404).json({mensaje: "Producto no encontrado"})
-    }
     next(err)
   }
 }
@@ -79,15 +49,6 @@ export const crearProducto = async (req: Request, res: Response, next: NextFunct
     });
 
   } catch (err: any) {
-    const erroresNegocio: Record<string, string> = {
-      "CATEGORIA_NOT_FOUND": "La categoria especificada no existe en el sistema",
-      "PRODUCT_NAME_EXISTS": "El nombre del producto ya existe",
-    };
-
-    if(erroresNegocio[err.message]) {
-      return res.status(400).json({error: erroresNegocio[err.message]})
-    }
-  
     next(err)
   }
 }
@@ -106,15 +67,6 @@ export const editarProducto = async (req: Request, res: Response, next: NextFunc
       datos_actualizados: datos,
     })
   } catch (err: any) {
-    const errorMap: Record<string, {status: number, msg: string}> = {
-      "PRODUCT_NOT_FOUND":   {status: 400, msg: "El producto que intentas editar no existe."},
-      "PRODUCT_NAME_EXISTS": {status: 400, msg: "No puedes usar ese nombre, ya pertenece a otro producto."},
-      "CATEGORIA_NOT_FOUND": {status: 400, msg: "La categoría especificada no es válida."}
-    };
-
-    const error = errorMap[err.message];
-    if(error) return res.status(error.status).json({error: error.msg});
-
     next(err);
   }
 }
@@ -134,17 +86,6 @@ export const actualizarParcial = async (req: Request, res: Response, next: NextF
     });
 
   } catch (err: any) {
-    const errorMap: Record<string, {status: number, msg: string}> = {
-      "PRODUCT_NOT_FOUND": {status: 400, msg: "No se encontro el producto para actualizar"},
-      "PRODUCT_NAME_EXISTS": {status: 400, msg: "El nuevo nombre ya esta en uso"},
-      "CATEGORIA_NOT_FOUND": {status: 400, msg: "La categoria no existe"},
-      "NO_FIELDS_TO_UPDATE": {status: 400, msg: "No enviaste campos para modificar"},
-    };
-
-    const error = errorMap[err.message];
-    if(error) {
-      return res.status(error.status).json({error: error.msg})
-    }
     next(err);
   }
 }
@@ -167,11 +108,6 @@ export const ocultarProducto = async (req: Request, res: Response, next: NextFun
       }
     })
   } catch (err: any) {
-    if(err.message === "PRODUCT_NOT_FOUND_OR_ALREADY_HIDDEN") {
-      return res.status(404).json({
-        error: "El producto no existe o ya ha sido ocultado previamente."
-      })
-    }
     next(err);
   }
 }
@@ -193,14 +129,6 @@ export const restaurarProducto = async (req: Request, res: Response, next: NextF
     })
 
   } catch (err: any) {
-    const errorMap: Record<string, string> = {
-      "PRODUCT_NOT_FOUND": "El producto no existe en la base de datos.",
-      "PRODUCT_ALREADY_ACTIVE": "Este producto ya se encuentra activo, no es necesario restaurarlo."
-    }
-
-    if(errorMap[err.message]) {
-      return res.status(400).json({error: errorMap[err.message]})
-    }
     next(err);
   }
 }
@@ -217,9 +145,6 @@ export const eliminarProducto = async (req: Request, res: Response, next: NextFu
       datos_eliminados: productoEliminado,
     })
   } catch (err: any) {
-    if(err.message === "PRODUCT_NOT_FOUND") {
-      return res.status(404).json({error: "El producto no existe o ya fue eliminado"});
-    }
     next(err);
   }
 }
@@ -233,9 +158,6 @@ export const eliminarTodo = async (req: Request, res: Response, next: NextFuncti
       cantidad_eliminada: total,
     })
   } catch (err: any) {
-    if(err.message === "NO_PRODUCTS_TO_DELETE") {
-      return res.status(404).json({error: "La tabla ya esta vacia"});
-    }
     next(err);
   }
 }
