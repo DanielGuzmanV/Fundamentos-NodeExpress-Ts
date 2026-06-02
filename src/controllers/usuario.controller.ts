@@ -27,16 +27,6 @@ export const obtenerUsuarioId = async (req: Request, res: Response, next: NextFu
       usuario
     })
   } catch (err: any) {
-    const errorMap: Record<string, {status: number, msg: string }> = {
-      "UNAUTHENTICATED": {status: 401, msg: "No has iniciado sesión"},
-      "NOT_FOUND_ID": {status: 400, msg: "El ID proporcionado no es valido"},
-      "USER_NOT_FOUND": {status: 404, msg: "Usuario no encontrado"},
-      "UNAUTHORIZED_ACCESS": {status: 403, msg: "No tienes permiso para ver este perfil"},
-    }
-
-    const errors = errorMap[err.message];
-
-    if(errors) return res.status(errors.status).json({error: errors.msg});
     next(err);
   }
 }
@@ -45,7 +35,6 @@ export const obtenerUsuarioId = async (req: Request, res: Response, next: NextFu
 export const registrarUser = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const dataUser = req.body;
-
     const usuarioNuevo = await UsuarioServices.registrarUsuario(dataUser);
 
     res.status(201).json({
@@ -53,16 +42,6 @@ export const registrarUser = async (req: Request, res: Response, next: NextFunct
       usuario: usuarioNuevo
     })
   } catch (err: any) {
-    const errorMap: Record<string, {status: number, msg: string}> = {
-      "MISSING_DATA": {status: 400, msg: "Todos los datos son obligatorios"},
-      "INVALID_EMAIL_FORMAT": {status: 400, msg: "Formato del email invalido"},
-      "INVALID_PHONE_FORMAT": {status: 400, msg: "Formato del numero celular"},
-      "USER_ALREADY_EXISTS": {status: 400, msg: "El nombre de usuario ya existe"},
-      "EMAIL_ALREADY_EXISTS": {status: 400, msg: "El email del usuario ya existe"},
-    }
-
-    const errors = errorMap[err.message];
-    if(errors) return res.status(errors.status).json({ error: errors.msg });
     next(err);
   }
 }
@@ -71,7 +50,6 @@ export const registrarUser = async (req: Request, res: Response, next: NextFunct
 export const loginUser = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const dataUser = req.body;
-
     const resultadoUser = await UsuarioServices.loginUsuario(dataUser);
 
     res.status(200).json({
@@ -79,16 +57,6 @@ export const loginUser = async (req: Request, res: Response, next: NextFunction)
       ...resultadoUser
     })
   } catch (err: any) {
-    if(err.message === "MISSING_DATA") {
-      return res.status(400).json({ error: "Username y password obligatorios"});
-    }
-    if(err.message === "INVALID_CREDENTIALS_USER") {
-      return res.status(400).json({error: "Credenciales incorrectas del usuario"});
-    }
-    if(err.message === "INVALID_CREDENTIALS_PASSWORD") {
-      return res.status(400).json({error: "Credenciales incorrectas del password"});
-    }
-
     next(err);
   }
 }
@@ -105,16 +73,6 @@ export const editarUsuario = async (req: Request, res: Response, next: NextFunct
       id,
     });
   } catch (err: any) {
-    const errorMap: Record<string, {status: number, msg: string}> = {
-      "UNAUTHENTICATED": {status: 401, msg: "No has iniciado sesión"},
-      "NOT_FOUND_ID": {status: 400, msg: "El ID proporcionado no es valido"},
-      "USER_NOT_FOUND": {status: 404, msg: "Usuario no encontrado"},
-      "UNAUTHORIZED_ACCESS": {status: 403, msg: "No tienes permiso para editar este perfil"},
-    }
-
-    const errors = errorMap[err.message];
-    if(errors) return res.status(errors.status).json({error: errors.msg});
-
     next(err);
   }
 }
@@ -132,16 +90,6 @@ export const editarParcial = async (req: Request, res: Response, next: NextFunct
     })
 
   } catch (err: any) {
-    const errorMap: Record<string, {status: number, msg: string}> = {
-      "UNAUTHENTICATED": {status: 401, msg: "No has iniciado sesión"},
-      "NOT_FOUND_ID": {status: 400, msg: "El ID proporcionado no es valido"},
-      "USER_NOT_FOUND": {status: 404, msg: "Usuario no encontrado"},
-      "UNAUTHORIZED_ACCESS": {status: 403, msg: "No tienes permiso para editar este perfil"},
-    }
-
-    const errors = errorMap[err.message];
-    if(errors) return res.status(errors.status).json({error: errors.msg});
-
     next(err);
   }
 }
@@ -158,24 +106,6 @@ export const actualizarPassword = async (req: Request, res: Response, next: Next
       id
     });
   } catch (err: any) {
-    const errorMap: Record<string, {status: number, msg: string}> = {
-      "UNAUTHENTICATED": {status: 401, msg: "No has iniciado sesión"},
-      "NOT_FOUND_ID": {status: 400, msg: "El ID proporcionado no es valido"},
-      "USER_NOT_FOUND": {status: 404, msg: "Usuario no encontrado"},
-      "UNAUTHORIZED_ACCESS": {status: 403, msg: "No tienes permiso para cambiar esta contraseña"},
-      "VALIDATION_ERROR": {status: 400, msg: "Error de validación: La nueva contraseña no cumple los requisitos"}, // Error Zod
-      "INVALID_OLD_PASSWORD": {status: 401, msg: "La contraseña actual es incorrecta"}, // Nuevo error
-    }
-
-    // Manejo de errores específicos de Zod o personalizados
-    if (err.message.startsWith("VALIDATION_ERROR:")) {
-      const zodMsg = err.message.substring("VALIDATION_ERROR: ".length);
-      return res.status(400).json({ error: zodMsg });
-    }
-
-    const errors = errorMap[err.message];
-    if(errors) return res.status(errors.status).json({error: errors.msg});
-
     next(err);
   }
 }
@@ -192,24 +122,7 @@ export const actualizarEmail = async (req: Request, res: Response, next: NextFun
       id,
     })
   } catch (err: any) {
-    const errorMap: Record<string, {status: number, msg: string}> = {
-      "UNAUTHENTICATED": {status: 401, msg: "No has iniciado sesión"},
-      "NOT_FOUND_ID": {status: 400, msg: "El ID proporcionado no es valido"},
-      "USER_NOT_FOUND": {status: 404, msg: "Usuario no encontrado"},
-      "UNAUTHORIZED_ACCESS": {status: 403, msg: "No tienes permiso para actualizar este email"},
-      "VALIDATION_ERROR": {status: 400, msg: "Error de validación del email"}, // Zod
-      "EMAIL_ALREADY_EXISTS": {status: 400, msg: "El nuevo email ya está en uso por otro usuario"},
-    }
-
-    if(err.message.startsWith("VALIDATION_ERROR")) {
-      const zodMsg = err.message.substring("VALIDATION_ERROR:".length);
-      return res.status(400).json({error: zodMsg});
-    }
-
-    const errors = errorMap[err.message];
-    if(errors) return res.status(errors.status).json({error: errors.msg});
-
-    next();
+    next(err);
   }
 }
 
@@ -224,16 +137,6 @@ export const mostrarUsuario = async (req: Request, res: Response, next: NextFunc
     })
 
   } catch (err: any) {
-    const errorMap: Record<string, {status: number, msg: string}> = {
-      "USER_ALREADY_ACTIVE": {status: 401, msg: "El usuario ya esta activo"},
-      "NOT_FOUND_ID": {status: 400, msg: "El ID proporcionado no es valido"},
-      "USER_NOT_FOUND": {status: 404, msg: "Usuario no encontrado"},
-      "UNAUTHORIZED_ACCESS": {status: 403, msg: "Solo los administradores pueden eliminar usuarios"},
-    }
-
-    const errors = errorMap[err.message];
-    if(errors) return res.status(errors.status).json({error: errors.msg});
-
     next(err);
 
   }
@@ -250,16 +153,6 @@ export const ocultarUsuario = async (req: Request, res: Response, next: NextFunc
     })
 
   } catch (err: any) {
-    const errorMap: Record<string, {status: number, msg: string}> = {
-      "CANNOT_DELETE_SELF": {status: 401, msg: "No puedes ocultar tu propia cuenta"},
-      "NOT_FOUND_ID": {status: 400, msg: "El ID proporcionado no es valido"},
-      "USER_NOT_FOUND": {status: 404, msg: "Usuario no encontrado"},
-      "UNAUTHORIZED_ACCESS": {status: 403, msg: "Solo los administradores pueden eliminar usuarios"},
-    }
-
-    const errors = errorMap[err.message];
-    if(errors) return res.status(errors.status).json({error: errors.msg});
-
     next(err);
   }
 }
@@ -274,16 +167,6 @@ export const eliminarUsuario = async (req: Request, res: Response, next: NextFun
       id
     });
   } catch (err: any) {
-    const errorMap: Record<string, {status: number, msg: string}> = {
-      "UNAUTHENTICATED": {status: 401, msg: "No has iniciado sesión"},
-      "NOT_FOUND_ID": {status: 400, msg: "El ID proporcionado no es valido"},
-      "USER_NOT_FOUND": {status: 404, msg: "Usuario no encontrado"},
-      "UNAUTHORIZED_ACCESS": {status: 403, msg: "Solo los administradores pueden eliminar usuarios"},
-    }
-
-    const errors = errorMap[err.message];
-    if(errors) return res.status(errors.status).json({error: errors.msg});
-
     next(err);
   }
 }

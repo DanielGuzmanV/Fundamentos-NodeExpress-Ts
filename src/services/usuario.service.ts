@@ -4,6 +4,7 @@ import UsuarioModel from "../models/usuario.model.js";
 import { User, UserPayload } from "../types/user.js";
 import { updateEmailSchema, updatePasswordSchema } from "../schemas/user.schema.js";
 import { email, ZodError } from "zod";
+import { AppError } from "../utils/AppError.js";
 
 const UsuarioServices = {
 
@@ -15,17 +16,17 @@ const UsuarioServices = {
   // Obtener un usuario por ID
   obtenerUsuarioPorId: async (id: string[] | string | undefined, userLogueado?: UserPayload) => {
     const idNum = Number(id);
-    if (!userLogueado) throw new Error("UNAUTHENTICATED");
+    if (!userLogueado) throw new AppError("No has iniciado sesión.", 401);
 
-    if(isNaN(idNum)) throw new Error("NOT_FOUND_ID");
+    if(isNaN(idNum)) throw new AppError("El ID proporcionado no es valido.", 400);
 
     // logica de autorizacion
     if(userLogueado.rol !== 'admin' && userLogueado.id !== idNum) {
-      throw new Error("UNAUTHORIZED_ACCESS");
+      throw new AppError("No tienes permiso para ver este perfil.", 403);
     }
 
     const usuario = await UsuarioModel.getById(idNum);
-    if(!usuario) throw new Error("USER_NOT_FOUND");
+    if(!usuario) throw new AppError("Usuario no encontrado.", 404);
 
     return usuario;
   },
@@ -36,24 +37,24 @@ const UsuarioServices = {
 
     // Validar que no falten campos obligatorios
     if(!username || !password || !nombre || !apellido || !email || !telefono) {
-      throw new Error("MISSING_DATA");
+      throw new AppError("Todos los datos son obligatorios.", 400);
     }
 
     // Validar formato de email
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if(!emailRegex.test(email)) throw new Error("INVALID_EMAIL_FORMAT");
+    if(!emailRegex.test(email)) throw new AppError("Formato del email invalido.", 400);
 
     // Validar telefono (minimo 7-8 digitos, solo numeros)
     const phoneRegex = /^[0-9]{7,15}$/;
-    if (!phoneRegex.test(telefono)) throw new Error("INVALID_PHONE_FORMAT");
+    if (!phoneRegex.test(telefono)) throw new AppError("Formato del numero celular.", 400);
 
     // Validacion si ya existe el nombre del usuario
     const usuarioExistente = await UsuarioModel.getByUsername(username);
-    if(usuarioExistente) throw new Error("USER_ALREADY_EXISTS");
+    if(usuarioExistente) throw new AppError("El nombre de usuario ya existe.", 400);
 
     // Validacion si ya existe el email
     const emailExistente = await UsuarioModel.getByEmail(email);
-    if (emailExistente) throw new Error("EMAIL_ALREADY_EXISTS");
+    if (emailExistente) throw new AppError("El email del usuario ya existe.", 400);
 
     // Encriptar la contraseña antes de enviarla
     const saltRounds = 10;
@@ -77,15 +78,15 @@ const UsuarioServices = {
   loginUsuario: async (datos: User) => {
     const {username, password} = datos;
 
-    if(!username || !password) throw new Error("MISSING_DATA");
+    if(!username || !password) throw new AppError("Username y password obligatorios.", 400);
 
     // Buscamos si el usuario existe
     const usuario = await UsuarioModel.getByUsername(username);
-    if(!usuario) throw new Error("INVALID_CREDENTIALS_USER");
+    if(!usuario) throw new AppError("Credenciales incorrectas del usuario.", 400);
 
     // Comparar las contraseñas enviada con el hash
     const coincide = await bcrypt.compare(password, usuario.password);
-    if(!coincide) throw new Error("INVALID_CREDENTIALS_PASSWORD");
+    if(!coincide) throw new AppError("Credenciales incorrectas del password.", 400);
 
     // Generar el Token JWT
     const secret = process.env.JWT_SECRET || "clave_secreta_por_defecto";
@@ -116,18 +117,18 @@ const UsuarioServices = {
     datosUpdate: User,
     userLogueado?: UserPayload
   ) => {
-    if(!userLogueado) throw new Error("UNAUTHENTICATED");
+    if(!userLogueado) throw new AppError("No has iniciado sesión.", 401);
 
     const idNum = Number(id);
-    if(isNaN(idNum)) throw new Error("NOT_FOUND_ID");
+    if(isNaN(idNum)) throw new AppError("El ID proporcionado no es valido.", 404);
 
     // logica de autorizacion
     if(userLogueado.rol !== 'admin' && userLogueado.id !== idNum) {
-      throw new Error("UNAUTHORIZED_ACCESS");
+      throw new AppError("No tienes permiso para editar este perfil.", 403);
     }
 
     const userExiste = await UsuarioModel.getById(idNum);
-    if(!userExiste) throw new Error("USER_NOT_FOUND");
+    if(!userExiste) throw new AppError("Usuario no encontrado.", 404);
 
     // Regla de negocio: Si no es admin no podra cambiarse su propio rol
     const rolEdit = userLogueado.rol === 'admin' 
@@ -151,13 +152,13 @@ const UsuarioServices = {
     datosUpdate: Partial<User>,
     userLogueado?: UserPayload
   ) => {
-    if(!userLogueado) throw new Error("UNAUTHENTICATED");
+    if(!userLogueado) throw new AppError("No has iniciado sesión.", 401);
 
     const idNum = Number(id);
-    if(isNaN(idNum)) throw new Error("NOT_FOUND_ID");
+    if(isNaN(idNum)) throw new AppError("El ID proporcionado no es valido.", 404);
 
     if(userLogueado.rol !== 'admin' && userLogueado.id !== idNum) {
-      throw new Error("UNAUTHORIZED_ACCESS");
+      throw new AppError("No tienes permiso para editar este perfil.", 403);
     }
 
     if(userLogueado.rol !== 'admin' && datosUpdate.rol) {
@@ -169,7 +170,7 @@ const UsuarioServices = {
     delete datosUpdate.email;
 
     const userExiste = await UsuarioModel.getById(idNum);
-    if(!userExiste) throw new Error("USER_NOT_FOUND");
+    if(!userExiste) throw new AppError("Usuario no encontrado.", 404);
 
     return await UsuarioModel.updatePartial(idNum, datosUpdate);
 
@@ -181,14 +182,14 @@ const UsuarioServices = {
     passwords: {oldPassword: string, newPassword: string},
     userLogueado: UserPayload
   ) => {
-    if(!userLogueado) throw new Error("UNAUTHENTICATED");
+    if(!userLogueado) throw new AppError("No has iniciado sesión.", 401);
 
     const idNum = Number(id);
-    if(isNaN(idNum)) throw new Error("NOT_FOUND_ID");
+    if(isNaN(idNum)) throw new AppError("El ID proporcionado no es valido.", 400);
 
     // Logica de autorizacion
     if(userLogueado.rol !== 'admin' && userLogueado.id !== idNum) {
-      throw new Error("UNAUTHORIZED_ACCESS");
+      throw new AppError("No tienes permiso para cambiar esta contraseña", 403);
     }
 
     // Nueva validacion de las contraseñas con Zod
@@ -199,20 +200,20 @@ const UsuarioServices = {
         const errorMssage = error.issues.length > 0
           ? error.issues[0]?.message
           : "Error desconocido en la validación de la contraseña.";
-        throw new Error(`VALIDATION_ERROR: ${errorMssage}`);
+        throw new AppError(`Error de validacion: ${errorMssage}`, 400);
       } else {
         // En caso de que ZodError no tenga la estructura esperada o sea otro tipo de error
-        throw new Error(`VALIDATION_ERROR: Error inesperado durante la validación de la contraseña.`);
+        throw new AppError(`Error inesperado durante la validación de la contraseña.`, 500);
       }
     }
 
     // Obtener el usuario para verificar la contraseña actual
     const usuario = await UsuarioModel.getByIdWithPassword(idNum);
-    if(!usuario) throw new Error("USER_NOT_FOUND");
+    if(!usuario) throw new AppError("Usuario no encontrado", 404);
 
     // Comparar la contraseña antigua enviada con el hash guardado
     const coincide = await bcrypt.compare(passwords.oldPassword, usuario.password);
-    if(!coincide) throw new Error("INVALID_OLD_PASSWORD");
+    if(!coincide) throw new AppError("La contraseña actual es incorrecta.", 401);
 
     const saltRounds = 10;
     const hashedPassword = await bcrypt.hash(passwords.newPassword, saltRounds);
@@ -226,13 +227,13 @@ const UsuarioServices = {
     newEmail: string,
     userLogueado: UserPayload
   ) => {
-    if(!userLogueado) throw new Error("UNAUTHENTICATED");
+    if(!userLogueado) throw new AppError("No has iniciado sesión.", 401);
 
     const idNum = Number(id);
-    if(isNaN(idNum)) throw new Error("NOT_FOUND_ID");
+    if(isNaN(idNum)) throw new AppError("El ID proporcionado no es valido.", 400);
 
     if(userLogueado.rol !== 'admin' && userLogueado.id !== idNum) {
-      throw new Error("UNAUTHORIZED_ACCESS");
+      throw new AppError("No tienes permiso para actualizar este email.", 403);
     }
 
     // Verificar el formato del nuevo email con zod
@@ -243,20 +244,26 @@ const UsuarioServices = {
         const errorMessage = error.issues.length > 0
           ? error.issues[0]?.message
           : "Error desconocido en la validacion del email";
-        throw new Error(`VALIDATION_ERROR: ${errorMessage}`);
+        throw new AppError(`Error de validacion: ${errorMessage}`, 400);
       } else {
-        throw new Error("VALIDATION_ERROR: error inesperado durante la validacion del email");
+        throw new AppError("Error inesperado durante la validacion del email", 500);
       }
     }
 
     // Obtener el usuario actual para verificar si el email es el mismo
     const usuarioActual = await UsuarioModel.getById(idNum);
-    if(!usuarioActual) throw new Error("USER_NOT_FOUND");
+    if(!usuarioActual) throw new AppError("Usuario no encontrado.", 404);
+
+    // Si el email es el mismo al nuevo no se hace nada
+    if (usuarioActual.email === newEmail) {
+      return { message: "El email es el mismo, no se realizó ninguna actualización." };
+    }
+
 
     // Si el email es el mismo al nuevo no se hace nada
     const emailExistente = await UsuarioModel.getByEmail(newEmail);
     if(emailExistente && emailExistente.id !== idNum) {
-      throw new Error("EMAIL_ALREADY_EXISTS");
+      throw new AppError("El email ya está en uso por otro usuario.", 400); 
     }
 
     await UsuarioModel.updateEmail(idNum, newEmail);
@@ -266,16 +273,16 @@ const UsuarioServices = {
 
   activarUsuario: async (id: string[] | string | undefined, userLogueado?: UserPayload) => {
     if(!userLogueado || userLogueado.rol !== 'admin') {
-      throw new Error("UNAUTHORIZED_ACCESS");
+      throw new AppError("Solo los administradores pueden eliminar usuarios.", 403);
     }
 
     const idNum = Number(id);
-    if(isNaN(idNum)) throw new Error("NOT_FOUND_ID");
+    if(isNaN(idNum)) throw new AppError("El ID proporcionado no es valido.", 400);
 
     const userExist = await UsuarioModel.getByIdNoFilter(idNum);
-    if(!userExist) throw new Error("USER_NOT_FOUND");
+    if(!userExist) throw new AppError("Usuario no encontrado.", 404);
 
-    if(userExist.activo === 1) throw new Error("USER_ALREADY_ACTIVE");
+    if(userExist.activo === 1) throw new AppError("El usuario ya esta activo.", 401);
     
     return await UsuarioModel.showUser(idNum);
   },
@@ -283,34 +290,34 @@ const UsuarioServices = {
   // Eliminar/ocultar usuario
   ocultarUsuario: async (id: string[] | string | undefined, userLogueado?: UserPayload) => {
     if(!userLogueado || userLogueado.rol !== 'admin') {
-      throw new Error("UNAUTHORIZED_ACCESS");
+      throw new AppError("Solo los administradores pueden eliminar usuarios.", 403);
     }
 
     const idNum = Number(id);
-    if(isNaN(idNum)) throw new Error("NOT_FOUND_ID");
+    if(isNaN(idNum)) throw new AppError("El ID proporcionado no es valido.", 400);
 
     const userExiste = await UsuarioModel.getById(idNum);
-    if(!userExiste) throw new Error("USER_NOT_FOUND");
+    if(!userExiste) throw new AppError("Usuario no encontrado.", 404);
 
     // Evitar que un admin se oculte asi mismo
-    if(userLogueado.id === idNum) throw new Error("CANNOT_DELETE_SELF");
+    if(userLogueado.id === idNum) throw new AppError("No puedes ocultar tu propia cuenta.", 401);
 
     return await UsuarioModel.softDelete(idNum);
   },
 
   // Eliminar un usuario
   eliminarUsuario: async (id: string[] | string | undefined, userLogueado?: UserPayload) => {
-    if(!userLogueado) throw new Error("UNAUTHENTICATED");
+    if(!userLogueado) throw new AppError("No has iniciado sesión.", 401);
 
     if(userLogueado.rol !== 'admin') {
-      throw new Error("UNAUTHORIZED_ACCESS");
+      throw new AppError("Solo los administradores pueden eliminar usuarios.", 403);
     }
 
     const idNum = Number(id);
-    if(isNaN(idNum)) throw new Error("NOT_FOUND_ID");
+    if(isNaN(idNum)) throw new AppError("El ID proporcionado no es valido.", 400);
 
     const userExiste = await UsuarioModel.getById(idNum);
-    if(!userExiste) throw new Error("USER_NOT_FOUND");
+    if(!userExiste) throw new AppError("Usuario no encontrado.", 404);
 
     return await UsuarioModel.delete(idNum);
   }
