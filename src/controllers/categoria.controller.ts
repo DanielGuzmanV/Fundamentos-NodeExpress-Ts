@@ -114,7 +114,7 @@ export const eliminarCategoria = async (req: Request, res: Response, next: NextF
         error: "No puedes eliminarla, tiene productos asociados. Prueba ocultándola."
       })
     }
-    next();
+    next(err);
   }
 }
 
