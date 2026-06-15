@@ -6,5 +6,4 @@ export interface Venta {
   precio_unidad: number;
   total: number;
   fecha?: string;
-  producto_nombre?: string;
 }
