@@ -6,6 +6,7 @@ dotenv.config();
 import categoriaRoutes from './routes/categoria.routes.js'
 import productosRoutes from './routes/producto.routes.js';
 import usuarioRoutes from './routes/usuario.routes.js';
+import ventaRoutes from './routes/venta.routes.js';
 
 // Importacion de middlewares:
 import { logger, jsonSyntaxError, validarContenido } from './middlewares/app.middlewares.js';
@@ -25,6 +26,7 @@ app.use(validarContenido);
 app.use('/categorias', categoriaRoutes);
 app.use('/productos', productosRoutes);
 app.use('/auth', usuarioRoutes);
+app.use('/ventas', ventaRoutes);
 
 // ==================================================
 app.get('/', (req: Request, res: Response) => {
