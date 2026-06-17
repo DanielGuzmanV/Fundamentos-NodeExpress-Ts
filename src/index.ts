@@ -11,6 +11,7 @@ import ventaRoutes from './routes/venta.routes.js';
 // Importacion de middlewares:
 import { logger, jsonSyntaxError, validarContenido } from './middlewares/app.middlewares.js';
 import { errorHandler } from './middlewares/error.handler.js';
+import { inicializarTablas } from './config/init.db.js';
 
 const app = express();
 const PORT = Number(process.env.PORT) || 3000;
@@ -44,6 +45,8 @@ app.use((req: Request, res: Response) => {
 
 // Middleware de manejo de errores global
 app.use(errorHandler);
+
+await inicializarTablas();
 
 app.listen(PORT, () => {
   console.log(`Servidor corriendo en http://localhost:${PORT}`)
