@@ -7,3 +7,10 @@ export interface Venta {
   total: number;
   fecha?: string;
 }
+
+export interface VentaUsuario {
+  usuario_id: number;
+  usuario_username: string;
+  total_ventas: number;
+  cantidad_ventas: number;
+}
