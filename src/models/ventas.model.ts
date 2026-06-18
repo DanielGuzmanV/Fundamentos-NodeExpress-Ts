@@ -1,5 +1,5 @@
 import db from "../config/database.js";
-import { Venta } from "../types/venta.js";
+import { Venta, VentaUsuario } from "../types/venta.js";
 
 export const VentaModel = {
 
@@ -93,6 +93,28 @@ export const VentaModel = {
         })
       })
     })
+  },
+
+  // Obtener el reporte de ventas agrupados por usuario
+  getSalesByUser: async (): Promise<VentaUsuario[]> => {
+    return new Promise((resolve, reject) => {
+      const sql = `
+        SELECT
+          u.id AS usuario_id,
+          u.username AS usuario_username,
+          SUM(v.total) AS total_ventas,
+          COUNT(v.id) AS cantidad_ventas
+        FROM ventas v
+        JOIN usuarios u ON v.usuario_id = u.id
+        GROUP BY u.id, u.username
+        ORDER BY total_ventas DESC;
+      `;
+      db.all(sql, [], (err, rows) => {
+        if(err) return reject(err);
+        resolve(rows as VentaUsuario[]);
+      })
+    })
   }
+
 };
 
