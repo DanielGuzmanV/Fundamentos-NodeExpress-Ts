@@ -2,7 +2,7 @@ import { ZodError } from "zod";
 import { VentaModel } from "../models/ventas.model.js"
 import { crearVentaSchema } from "../schemas/venta.schema.js";
 import { UserPayload } from "../types/user.js";
-import { Venta } from "../types/venta.js"
+import { Venta, VentaUsuario } from "../types/venta.js"
 import { AppError } from "../utils/AppError.js";
 import ProductoModel from "../models/producto.model.js";
 
@@ -65,6 +65,15 @@ const VentaService = {
     });
 
     return {id: nuevaVenta.id, total};
+  },
+
+  // Obtener reporte de ventas agrupados por usuario
+  getReportSalesByUser: async (userLogueado: UserPayload): Promise<VentaUsuario[]> => {
+    if(!userLogueado || userLogueado.rol !== 'admin') {
+      throw new AppError("No tienes permiso para acceder a los reportes de ventas.", 403);
+    }
+    
+    return await VentaModel.getSalesByUser();
   }
 
   // Agregar las adelante los services: cancelarVenta o generarReporte

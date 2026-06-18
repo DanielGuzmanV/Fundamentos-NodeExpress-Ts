@@ -49,3 +49,17 @@ export const crearVenta = async (req: Request, res: Response, next: NextFunction
     next(err);
   }
 }
+
+// Controller para obtener el reporte de ventas por usuario
+export const getSalesByUserReport = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const report = await VentaService.getReportSalesByUser(req.user!);
+
+    res.status(200).json({
+      mensaje: report.length > 0 ? "Report de ventas por usuario obtenido correctamente" : "No hay datos de ventas para el reporte",
+      datos: report
+    });
+  } catch (err: any) {
+    next(err);
+  }
+}
