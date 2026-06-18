@@ -35,7 +35,7 @@ const ProductoModel = {
       else if(orden === 'nombre') sql += " ORDER BY p.nombre ASC";
 
       // Paginacion
-      const resPorPagina = parseInt(String(limite || 5));
+      const resPorPagina = parseInt(String(limite || 10));
       const pagActual = parseInt(String(pagina || 1));
       const offset = (pagActual - 1) * resPorPagina;
 
