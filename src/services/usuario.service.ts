@@ -2,7 +2,7 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import UsuarioModel from "../models/usuario.model.js";
 import { User, UserPayload } from "../types/user.js";
-import { updateEmailSchema, updatePasswordSchema } from "../schemas/user.schema.js";
+import { registrarUsuarioSchema, updateEmailSchema, updatePasswordSchema } from "../schemas/user.schema.js";
 import { email, ZodError } from "zod";
 import { AppError } from "../utils/AppError.js";
 
@@ -33,20 +33,23 @@ const UsuarioServices = {
 
   // Registrar un nuevo usuario:
   registrarUsuario: async (datos: User) => {
-    const {username, password, nombre, apellido, email, telefono, rol} = datos;
 
-    // Validar que no falten campos obligatorios
-    if(!username || !password || !nombre || !apellido || !email || !telefono) {
-      throw new AppError("Todos los datos son obligatorios.", 400);
+    // Validar los datos de entrada de zod
+    let validatedDatos: User;
+    try {
+      validatedDatos = registrarUsuarioSchema.parse(datos) as User;
+    } catch (error: unknown) {
+      if(error instanceof ZodError) {
+        const errorMessage = error.issues.length > 0
+          ? error.issues[0]?.message
+          : "Error desconocido en la validacion del registro";
+        throw new AppError(`Error de validacion: ${errorMessage}`, 400);
+      } else {
+        throw new AppError(`Error inesperado durante la validacion del registro`, 500);
+      }
     }
 
-    // Validar formato de email
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if(!emailRegex.test(email)) throw new AppError("Formato del email invalido.", 400);
-
-    // Validar telefono (minimo 7-8 digitos, solo numeros)
-    const phoneRegex = /^[0-9]{7,15}$/;
-    if (!phoneRegex.test(telefono)) throw new AppError("Formato del numero celular.", 400);
+    const {username, password, nombre, apellido, email, telefono, rol} = validatedDatos;
 
     // Validacion si ya existe el nombre del usuario
     const usuarioExistente = await UsuarioModel.getByUsername(username);
@@ -61,8 +64,12 @@ const UsuarioServices = {
     const hashedPassword = await bcrypt.hash(password, saltRounds);
 
     const resultado = await UsuarioModel.create({
-      ...datos,
+      username,
       password: hashedPassword,
+      nombre,
+      apellido,
+      email,
+      telefono,
       rol: rol || 'vendedor'
     })
 
