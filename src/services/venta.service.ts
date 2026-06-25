@@ -74,9 +74,35 @@ const VentaService = {
     }
     
     return await VentaModel.getSalesByUser();
-  }
+  },
 
-  // Agregar las adelante los services: cancelarVenta o generarReporte
+  // Cancelar una venta (solo admin)
+  cancelarVenta: async (id: string | string[] | undefined, userLogueado: UserPayload): Promise<{message: string}> => {
+    if(!userLogueado || userLogueado.rol !== 'admin') {
+      throw new AppError("No tienes permiso para cancelar ventas", 403)
+    }
+
+    // Validar el ID
+    const idNum = Number(id);
+    if(isNaN(idNum)) throw new AppError("ID de venta no valido", 400);
+
+    // Llamar al modelo para cancelar venta
+    try {
+      await VentaModel.cancelSale(idNum);
+      return {message: "Venta cancelada y stock repuesto correctamente"}
+    } catch (error: any) {
+      switch (error.message) {
+        case "SALE_NOT_FOUND_OR_INACTIVE":
+          throw new AppError("Venta no encontrada o ya estaba cancelada.", 404); 
+        case "FALLO_AL_CANCELAR_VENTA":
+          throw new AppError("Hubo un problema al marcar la venta como cancelada.", 500); 
+        case "STOCK_REPLENISH_FAILED":
+          throw new AppError("Venta cancelada, pero hubo un problema al reponer el stock del producto. Contactar soporte.", 500);
+        default:
+          throw new AppError(`Error al cancelar la venta: ${error.message}`, 500); 
+      }
+    }
+  }
 }
 
 export default VentaService

@@ -114,6 +114,66 @@ export const VentaModel = {
         resolve(rows as VentaUsuario[]);
       })
     })
+  },
+
+  // Cancelar una venta y reponer el stock 
+  cancelSale: async (id: number): Promise<void> => {
+    return new Promise((resolve, reject) => {
+      db.serialize(() => {
+        db.run("BEGIN TRANSACTION;"); // Iniciar la transaccion
+
+        // Obtener detalles de la venta a cancelar para saber que reponer
+        const getVentaSql = `SELECT producto_id, cantidad FROM ventas WHERE id = ? AND activo = 1;`;
+        db.get(getVentaSql, [id], (err, row: Venta | undefined) => {
+          if(err) {
+            db.run("ROLLBACK;");
+            return reject(err);
+          }
+          if(!row) {
+            // Si no encuentra la venta o ya esta inactiva lanza un error
+            db.run("ROLLBACK;");
+            return reject(new Error("SALE_NOT_FOUND_OR_INACTIVE"));
+          }
+
+          const {producto_id, cantidad} = row;
+
+          // Marcar la venta como inactiva
+          const updateVentaSql = `UPDATE ventas SET activo = 0 WHERE id = ? AND activo = 1;`;
+          db.run(updateVentaSql, [id], function (err) {
+            if(err) {
+              db.run('ROLLBACK;');
+              return reject(err);
+            }
+            if(this.changes === 0) {
+              db.run("ROLLBACK;");
+              return reject (new Error("SALE_CANCEL_UPDATE_FAILED"));
+            }
+
+            // Reponemos el stock del producto
+            const updateStockSql = `UPDATE productos SET stock = stock + ? WHERE id = ?;`;
+            db.run(updateStockSql, [cantidad, producto_id], function(err) {
+              if(err) {
+                db.run("ROLLBACK;");
+                return reject(err);
+              }
+              if(this.changes === 0) {
+                db.run("ROLLBACK;");
+                return reject(new Error("STOCK_REPLENISH_FAILED"));
+              }
+
+              // Si todo fue bien, entonces confirmamos la transaccion
+              db.run("COMMIT;", (commitErr) => {
+                if(commitErr) {
+                  db.run("ROLLBACK;");
+                  return reject(commitErr);
+                }
+                resolve();
+              });
+            });
+          });
+        });
+      });
+    });
   }
 
 };

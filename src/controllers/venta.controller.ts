@@ -63,3 +63,18 @@ export const getSalesByUserReport = async (req: Request, res: Response, next: Ne
     next(err);
   }
 }
+
+// Controller para cancelar una venta
+export const cancelarVenta = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const {id} = req.params;
+    const resultado = await VentaService.cancelarVenta(id, req.user!)
+
+    res.status(200).json({
+      mensaje: resultado.message,
+      id_venta_cancelada: id
+    });
+  } catch (err: any) {
+    next(err);
+  }
+}
