@@ -8,7 +8,7 @@ export const VentaModel = {
     return new Promise((resolve, reject) => {
       const sql = `
         SELECT
-          v.id, v.cantidad, v.precio_unidad, v.total, v.fecha,
+          v.id, v.cantidad, v.precio_unidad, v.total, v.fecha, v.activo,
           p.nombre AS producto_nombre, p.precio AS producto_precio_actual, p.stock AS producto_stock_actual,
           u.username AS usuario_username
         FROM ventas v
