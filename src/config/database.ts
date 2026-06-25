@@ -78,6 +78,7 @@ db.serialize(() => {
         precio_unidad REAL NOT NULL,
         total REAL NOT NULL,
         fecha DATETIME DEFAULT CURRENT_TIMESTAMP,
+        activo INTEGER DEFAULT 1,
         FOREIGN KEY (producto_id) REFERENCES productos (id),
         FOREIGN KEY (usuario_id) REFERENCES usuarios (id)
       )
