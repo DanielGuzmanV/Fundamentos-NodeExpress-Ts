@@ -10,7 +10,15 @@ const VentaService = {
   
   // Listar todas las ventas
   listarVentas: async (): Promise<Venta[]> => {
-    return await VentaModel.getAll();
+    const ventas = await VentaModel.getAll();
+
+    return ventas.map(venta => {
+      const {activo, ...datosVenta} = venta;
+      return ({
+        ...datosVenta,
+        estado: venta.activo === 1 ? "Venta realizada" : "Venta cancelada"
+      })
+    })
   },
 
   // Obtener una venta por su ID
