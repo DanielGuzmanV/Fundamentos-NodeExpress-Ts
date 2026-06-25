@@ -6,6 +6,7 @@ export interface Venta {
   precio_unidad: number;
   total: number;
   fecha?: string;
+  activo?: number;
 }
 
 export interface VentaUsuario {
