@@ -33,7 +33,10 @@ const VentaService = {
   },
 
   // Crear una nueva venta
-  crearVenta: async (datosVenta: {producto_id: number, cantidad: number}, userLogueado: UserPayload): Promise<{id: number, total: number}> => {
+crearVenta: async (
+    datosVenta: {producto_id: number, cantidad: number}, 
+    userLogueado: UserPayload
+  ): Promise<{id: number, total: number, namePrduct: string}> => {
     try {
       crearVentaSchema.parse(datosVenta);
     } catch (error: unknown) {
@@ -62,6 +65,7 @@ const VentaService = {
     // Calculamos precio_unidad y total
     const precio_unidad = producto.precio;
     const total = precio_unidad * cantidad;
+    const namePrduct = producto.nombre;
 
     // Creamos la venta en el modelo
     const nuevaVenta = await VentaModel.create({
@@ -72,7 +76,7 @@ const VentaService = {
       total
     });
 
-    return {id: nuevaVenta.id, total};
+    return {id: nuevaVenta.id, total, namePrduct};
   },
 
   // Obtener reporte de ventas agrupados por usuario

@@ -42,6 +42,7 @@ export const crearVenta = async (req: Request, res: Response, next: NextFunction
       mensaje: "Venta registrada con exito",
       id_venta: nuevaVenta.id,
       total_venta: nuevaVenta.total,
+      nombre_producto: nuevaVenta.namePrduct,
       producto_id: producto_id,
       cantidad: cantidad
     })
