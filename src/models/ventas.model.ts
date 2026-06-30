@@ -102,12 +102,23 @@ export const VentaModel = {
         SELECT
           u.id AS usuario_id,
           u.username AS usuario_username,
-          SUM(v.total) AS total_ventas,
-          COUNT(v.id) AS cantidad_ventas
+
+          -- Total y cantidad de Ventas (activas)
+          SUM(CASE WHEN v.activo = 1 THEN v.total ELSE 0 END) AS total_ventas_activas,
+          COUNT(CASE WHEN v.activo = 1 THEN v.id ELSE NULL END) AS cantidad_ventas_activas,
+
+          -- Total y cantidad de Ventas (canceladas)
+          SUM(CASE WHEN v.activo = 0 THEN v.total ELSE 0 END) AS total_ventas_canceladas,
+          COUNT(CASE WHEN v.activo = 0 THEN v.id ELSE NULL END) AS cantidad_ventas_canceladas,
+
+          -- Totales Globales (todas las ventas, activas + canceladas)
+          SUM(v.total) AS total_global_ventas,
+          COUNT(v.id) AS cantidad_global_ventas
+
         FROM ventas v
         JOIN usuarios u ON v.usuario_id = u.id
         GROUP BY u.id, u.username
-        ORDER BY total_ventas DESC;
+        ORDER BY total_global_ventas DESC;
       `;
       db.all(sql, [], (err, rows) => {
         if(err) return reject(err);
