@@ -1,5 +1,5 @@
 import db from "../config/database.js";
-import { Venta, VentaUsuario } from "../types/venta.js";
+import { Venta, VentaPorProducto, VentaUsuario } from "../types/venta.js";
 
 export const VentaModel = {
 
@@ -125,6 +125,30 @@ export const VentaModel = {
         resolve(rows as VentaUsuario[]);
       })
     })
+  },
+
+  // Obtener el reporte de ventas agrupadas por producto 
+  getSalesByProduct: async (): Promise<VentaPorProducto[]> => {
+    return new Promise((resolve, reject) => {
+      const sql = `
+        SELECT
+          p.id AS producto_id,
+          p.nombre AS producto_nombre,
+          p.precio AS producto_precio,
+          SUM(v.total) AS total_ventas_producto,
+          SUM(v.cantidad) AS cantidad_unidades_vendidas,
+          COUNT(v.id) AS cantidad_ventas_totales
+        FROM ventas v
+        JOIN productos p ON v.producto_id = p.id
+        WHERE v.activo = 1
+        GROUP BY p.id, p.nombre
+        ORDER BY total_ventas_producto DESC;
+      `;
+      db.all(sql, [], (err, rows) => {
+        if(err) return reject(err);
+        resolve(rows as VentaPorProducto[]);
+      });
+    });
   },
 
   // Cancelar una venta y reponer el stock 
