@@ -12,6 +12,10 @@ export interface Venta {
 export interface VentaUsuario {
   usuario_id: number;
   usuario_username: string;
-  total_ventas: number;
-  cantidad_ventas: number;
+  total_ventas_activas: number;
+  cantidad_ventas_activas: number;
+  total_ventas_canceladas: number;
+  cantidad_ventas_canceladas: number;
+  total_global_ventas: number;
+  cantidad_global_ventas: number;
 }
