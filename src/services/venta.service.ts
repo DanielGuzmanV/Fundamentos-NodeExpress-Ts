@@ -2,7 +2,7 @@ import { ZodError } from "zod";
 import { VentaModel } from "../models/ventas.model.js"
 import { crearVentaSchema } from "../schemas/venta.schema.js";
 import { UserPayload } from "../types/user.js";
-import { Venta, VentaUsuario } from "../types/venta.js"
+import { Venta, VentaPorProducto, VentaUsuario } from "../types/venta.js"
 import { AppError } from "../utils/AppError.js";
 import ProductoModel from "../models/producto.model.js";
 
@@ -82,6 +82,14 @@ const VentaService = {
     }
     
     return await VentaModel.getSalesByUser();
+  },
+
+  // Obtener reporte de ventas agrupadas por producto
+  getReportSalesByProduct: async (userLogueado: UserPayload): Promise<VentaPorProducto[]> => {
+    if(!userLogueado || userLogueado.rol !== 'admin') {
+      throw new AppError("No tienes permiso para acceder a los reportes de ventas por producto.", 403);
+    }
+    return await VentaModel.getSalesByProduct();
   },
 
   // Cancelar una venta (solo admin)
