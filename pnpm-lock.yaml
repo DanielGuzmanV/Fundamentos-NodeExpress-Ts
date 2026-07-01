@@ -39,6 +39,9 @@ importers:
       '@types/jsonwebtoken':
         specifier: ^9.0.10
         version: 9.0.10
+      '@types/knex':
+        specifier: ^0.16.1
+        version: 0.16.1(sqlite3@5.1.7)
       '@types/node':
         specifier: ^25.0.10
         version: 25.0.10
@@ -242,6 +245,10 @@ packages:
 
   '@types/jsonwebtoken@9.0.10':
     resolution: {integrity: sha512-asx5hIG9Qmf/1oStypjanR7iKTv0gXQ1Ov/jfrX6kS/EO0OFni8orbmGCn0672NHR3kXHwpAwR+B368ZGN/2rA==}
+
+  '@types/knex@0.16.1':
+    resolution: {integrity: sha512-54gWD1HWwdVx5iLHaJ1qxH3I6KyBsj5fFqzRpXFn7REWiEB2jwspeVCombNsocSrqPd7IRPqKrsIME7/cD+TFQ==}
+    deprecated: This is a stub types definition. knex provides its own type definitions, so you do not need this installed.
 
   '@types/ms@2.1.0':
     resolution: {integrity: sha512-GsCCIZDE/p3i96vtEqx+7dBUGXrc7zeSK3wwPHIaRThS+9OhWIXRqzs4d6k1SVU8g91DrNRWxWUGhp5KXQb2VA==}
@@ -1252,6 +1259,20 @@ snapshots:
     dependencies:
       '@types/ms': 2.1.0
       '@types/node': 25.0.10
+
+  '@types/knex@0.16.1(sqlite3@5.1.7)':
+    dependencies:
+      knex: 3.2.10(sqlite3@5.1.7)
+    transitivePeerDependencies:
+      - better-sqlite3
+      - mysql
+      - mysql2
+      - pg
+      - pg-native
+      - pg-query-stream
+      - sqlite3
+      - supports-color
+      - tedious
 
   '@types/ms@2.1.0': {}
 
