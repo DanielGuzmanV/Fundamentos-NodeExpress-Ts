@@ -79,6 +79,20 @@ export const getSalesByProductReport = async (req: Request, res: Response, next:
   }
 };
 
+// Controller para obtener el reporte de ventas por categoria
+export const getSalesByCategoryReport = async(req: Request, res: Response, next: NextFunction) => {
+  try {
+    const report = await VentaService.getReportSalesByCategory(req.user!);
+
+    res.status(200).json({
+      mensaje: report.length > 0 ? "Reporte de ventas por categoría obtenido correctamente" : "No hay datos de ventas por categoría para el reporte",
+      datos: report
+    })
+  } catch (err: any) {
+    next(err);
+  }
+}
+
 // Controller para cancelar una venta
 export const cancelarVenta = async (req: Request, res: Response, next: NextFunction) => {
   try {
