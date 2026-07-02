@@ -30,3 +30,9 @@ export interface VentaPorProducto {
   cantidad_unidades_vendidas: number;
   cantidad_ventas_totales: number;
 }
+
+// Reporte de ventas por categoria
+export interface VentaPorCategoria {
+  categoria: string;
+  total_ventas: number;
+}
