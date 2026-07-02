@@ -1,5 +1,5 @@
 import db from "../config/database.js";
-import { Venta, VentaPorProducto, VentaUsuario } from "../types/venta.js";
+import { Venta, VentaPorCategoria, VentaPorProducto, VentaUsuario } from "../types/venta.js";
 
 export const VentaModel = {
 
@@ -147,6 +147,29 @@ export const VentaModel = {
       db.all(sql, [], (err, rows) => {
         if(err) return reject(err);
         resolve(rows as VentaPorProducto[]);
+      });
+    });
+  },
+
+  // Obtener el reporte de ventas agrupadas por categoria
+  getSalesByCategory: async (): Promise<VentaPorCategoria[]> => {
+    return new Promise((resolve, reject) => {
+      const sql = `
+        SELECT 
+          c.nombre AS categoria,
+          v.cantidad AS cantidad_producto,
+          SUM(v.total) AS total_ventas
+        FROM ventas v
+        JOIN productos p ON v.producto_id = p.id
+        JOIN categorias c ON p.categoria_id = c.id
+        WHERE v.activo = 1
+        GROUP BY c.nombre
+        ORDER BY total_ventas DESC;
+      `;
+
+      db.all(sql, [], (err, rows) => {
+        if(err) return reject(err);
+        resolve(rows as VentaPorCategoria[]);
       });
     });
   },
