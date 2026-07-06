@@ -93,6 +93,20 @@ export const getSalesByCategoryReport = async(req: Request, res: Response, next:
   }
 }
 
+// Controller para obtener el reporte de ventas por dia
+export const getSalesByDayReport = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const report = await VentaService.getReportSalesByDay(req.user!);
+
+    res.status(200).json({
+      mensaje: report.length > 0 ? "Reporte de ventas por día obtenido correctamente" : "No hay datos de ventas por día para el reporte",
+      datos: report
+    })
+  } catch (err: any) {
+    next(err);
+  }
+}
+
 // Controller para cancelar una venta
 export const cancelarVenta = async (req: Request, res: Response, next: NextFunction) => {
   try {
