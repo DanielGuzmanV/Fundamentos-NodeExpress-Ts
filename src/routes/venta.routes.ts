@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { authenticateToken } from "../middlewares/auth.middleware.js";
 import { authorizeRole } from "../middlewares/rol.middleware.js";
-import { cancelarVenta, crearVenta, getSalesByCategoryReport, getSalesByProductReport, getSalesByUserReport, listarVentas, obtenerVentaId } from "../controllers/venta.controller.js";
+import { cancelarVenta, crearVenta, getSalesByCategoryReport, getSalesByDayReport, getSalesByProductReport, getSalesByUserReport, listarVentas, obtenerVentaId } from "../controllers/venta.controller.js";
 
 const router: Router = Router();
 
@@ -22,6 +22,9 @@ router.get('/report/product', authenticateToken, authorizeRole('admin'), getSale
 
 // GET /ventas/report/category = Reporte de venta por categoria
 router.get('/report/category', authenticateToken, authorizeRole('admin'), getSalesByCategoryReport);
+
+// GET /ventas/report/day = Reporte de venta por dia
+router.get('/report/day', authenticateToken, authorizeRole('admin'), getSalesByDayReport);
 
 // PATCH /ventas/:id/cancelar = Cancelar una venta (soft delete, solo admin)
 router.patch('/:id/cancel', authenticateToken, authorizeRole('admin'), cancelarVenta);
