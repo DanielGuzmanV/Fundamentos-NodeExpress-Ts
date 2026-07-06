@@ -1,5 +1,5 @@
 import db from "../config/database.js";
-import { Venta, VentaPorCategoria, VentaPorProducto, VentaUsuario } from "../types/venta.js";
+import { Venta, VentaPorCategoria, VentaPorDia, VentaPorProducto, VentaUsuario } from "../types/venta.js";
 
 export const VentaModel = {
 
@@ -170,6 +170,25 @@ export const VentaModel = {
       db.all(sql, [], (err, rows) => {
         if(err) return reject(err);
         resolve(rows as VentaPorCategoria[]);
+      });
+    });
+  },
+
+  // Obtener el reporte de ventas agrupadas por dia
+  getSalesByDay: async (): Promise<VentaPorDia[]> => {
+    return new Promise((resolve, reject) => {
+      const sql = `
+        SELECT 
+          DATE(fecha) AS dia,
+          SUM(total) AS ventas_diarias
+        FROM ventas
+        WHERE activo = 1
+        GROUP BY dia
+        ORDER BY dia;
+      `;
+      db.all(sql, [], (err, rows) => {
+        if(err) return reject(err);
+        resolve(rows as VentaPorDia[]);
       });
     });
   },
