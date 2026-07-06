@@ -37,3 +37,9 @@ export interface VentaPorCategoria {
   cantidad_productos: string;
   total_ventas: number;
 }
+
+// Reporte de ventas por dia
+export interface VentaPorDia {
+  dia: string;
+  ventas_diarias: number;
+}
