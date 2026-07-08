@@ -4,3 +4,4 @@ dist
 *.db
 fundamentos-backend.txt
 ruta-ramas.txt
+/src/generated/prisma
