@@ -4,10 +4,74 @@
 // Get a free hosted Postgres database in seconds: `npx create-db`
 
 generator client {
-  provider = "prisma-client"
+  provider = "prisma-client-js"
   output   = "../src/generated/prisma"
 }
 
 datasource db {
   provider = "sqlite"
+}
+
+// Tabla de categorias:
+model Categoria {
+  id      Int       @id @default(autoincrement())
+  nombre  String    @unique
+  activo  Int       @default(1)
+  // Relacion inversa: una categoria tiene muchos productos
+  productos Producto[]
+
+  @@map("categorias")
+}
+
+// Tabla de productos:
+model Producto {
+  id            Int       @id @default(autoincrement())
+  nombre        String
+  precio        Float
+  stock         Int
+  categoria_id  Int?
+  activo        Int       @default(1)
+
+  // Relaciones
+  categoria     Categoria? @relation(fields: [categoria_id], references: [id])
+  ventas Venta[]
+
+  @@map("productos")
+}
+
+// Tabla de usuarios:
+model Usuario {
+  id              Int       @id @default(autoincrement())
+  username        String    @unique
+  password        String
+  nombre          String?
+  apellido        String?
+  email            String    @unique
+  telefono        String?
+  rol             String    @default("vendedor")
+  activo          Int       @default(1)
+  fecha_creacion  DateTime  @default(now())
+
+  // Relaciones
+  ventas Venta[]
+
+  @@map("usuarios")
+}
+
+// Tabla de ventas:
+model Venta {
+  id            Int       @id @default(autoincrement())
+  producto_id   Int
+  usuario_id    Int
+  cantidad      Int       @default(1)
+  precio_unidad Float
+  total         Float
+  fecha         DateTime  @default(now())
+  activo        Int       @default(1)
+
+  // Relaciones
+  producto      Producto @relation(fields: [producto_id], references: [id])
+  usuario       Usuario @relation(fields: [usuario_id], references: [id])
+
+  @@map("ventas")
 }
