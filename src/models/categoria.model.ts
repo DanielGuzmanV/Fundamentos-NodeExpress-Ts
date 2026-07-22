@@ -1,67 +1,60 @@
 import db from '../config/database.js';
-import { Categoria } from '../types/index.js';
+import prisma from '../config/prisma.js';
+import { Categoria } from '../generated/prisma/index.js';
 
 const CategoriaModel = {
 
-  // Obtener todas las categorias
-  getAll: (): Promise<Categoria[]> => {
-    return new Promise((resolve, reject) => {
-      const sql = "SELECT * FROM categorias WHERE activo = 1";
-      db.all(sql, [], (err, filas) => {
-        if(err) return reject(err);
-        resolve(filas as Categoria[]);
-      });
+  // Obtener todas las categorias (Usando prisma)
+  getAll: async (): Promise<Categoria[]> => {
+    return await prisma.categoria.findMany({
+      where: { activo: 1 },
     });
   },
 
-  // Busqueda por Id y verifica si esta activo
-  getById: (id: number): Promise<Categoria | undefined> => {
-    return new Promise((resolve, reject) => {
-      const sql = "SELECT * FROM categorias WHERE id = ? AND activo = 1";
+  // Busqueda por Id y verifica si esta activo (Usando prisma)
+  getById: async (id: number): Promise<Categoria | null> => {
+    return await prisma.categoria.findFirst({
+      where: {
+        id: id,
+        activo: 1,
+      },
+    });
+  },
 
-      db.get(sql, [id], (err, row) => {
-        if(err) return reject(err);
-        resolve(row as Categoria | undefined);
-      })
+  // Busqueda por Id sin filtro (Usando prisma)
+  getByIdSinFiltro: async (id: number): Promise<Categoria | null> => {
+    return await prisma.categoria.findUnique({
+      where: {
+        id: id,
+        activo: 0
+      }
+    });
+  },
+
+  // Crear una categoria (Usando prisma)
+  create: async (nombre: string): Promise<Categoria> => {
+    return await prisma.categoria.create({
+      data: { nombre: nombre }
+    });
+  },
+
+  // Actualizar el nombre de una categoria (Usando prisma)
+  update: async (id: number, nuevoNombre: string): Promise<Categoria> => {
+    return await prisma.categoria.update({
+      where: { id: id, },
+      data: { nombre: nuevoNombre },
+    });
+  },
+
+  // Oculatar una categoria (Usando prisma)
+  deleteLogical: async (id: number): Promise<Categoria> => {
+    return await prisma.categoria.update({
+      where: { id: id },
+      data: { activo: 0 }
     })
   },
 
-  // Busqueda por Id
-  getByIdSinFiltro: (id: number): Promise<Categoria | undefined> => {
-    return new Promise((resolve, reject) => {
-      const sql = "SELECT * FROM categorias WHERE id = ? AND activo = 0";
-      db.get(sql, [id], (err, row) => {
-        if(err) return reject(err);
-        resolve(row as Categoria | undefined);
-      })
-    })
-  },
-
-  // Crear una categoria
-  create: (nombre: string): Promise<void> => {
-    return new Promise((resolve, reject) => {
-      const sql = "INSERT INTO categorias (nombre) VALUES (?)";
-      db.run(sql, [nombre], function(err) {
-        if(err) return reject(err);
-        resolve();
-      });
-    });
-  },
-
-  // Actualizar el nombre de una categoria
-  update: (id: number, nuevoNombre: string): Promise<void> => {
-    return new Promise((resolve, reject) => {
-      const sql = "UPDATE categorias SET nombre = ? WHERE id = ?";
-
-      db.run(sql, [nuevoNombre, id], function(err) {
-        if(err) return reject(err);
-        resolve();
-      });
-    });
-  },
-
-  // Oculatar una categoria
-  deleteLogical: (id: number): Promise<void> => {
+  dedleteLogical: (id: number): Promise<void> => {
     return new Promise((resolve, reject) => {
       const sql = "UPDATE categorias SET activo = 0 WHERE id = ? AND activo = 1";
       
