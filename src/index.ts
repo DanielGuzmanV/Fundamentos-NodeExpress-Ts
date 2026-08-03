@@ -46,8 +46,21 @@ app.use((req: Request, res: Response) => {
 // Middleware de manejo de errores global
 app.use(errorHandler);
 
-await inicializarTablas();
+// ==================================================
+// Inicialización segura del servidor y la base de datos
+// ==================================================
 
-app.listen(PORT, () => {
-  console.log(`Servidor corriendo en http://localhost:${PORT}`)
-})
+async function bootstrap() {
+  try {
+    await inicializarTablas();
+    
+    app.listen(PORT, () => {
+      console.log(`Servidor corriendo en http://localhost:${PORT}`)
+    })
+  } catch (error) {
+    console.error("Error fatal al iniciar la aplicación:", error);
+    process.exit(1);
+  }
+}
+
+bootstrap();
