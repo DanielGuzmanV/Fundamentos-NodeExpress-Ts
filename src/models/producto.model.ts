@@ -1,52 +1,39 @@
 import db from '../config/database.js';
-import { Producto } from '../types/index.js';
+import prisma from '../config/prisma.js';
+import { Prisma, Producto } from '../generated/prisma/index.js';
 import { FiltrosProducto } from '../types/productos.js';
 
 const ProductoModel = {
 
   // Consulta 1: obtener todos los productos con filtros
-  getAll: (filtros: FiltrosProducto): Promise<Producto[]> => {
-    return new Promise((resolve, reject) => {
-      const {min_precio, nombre, orden, limite, pagina } = filtros;
-      
-      // Obtenemos todos los productos que estan activos
-      let sql = `
-        SELECT p.*, c.nombre AS categoria_nombre
-        FROM productos p
-        LEFT JOIN categorias c ON p.categoria_id = c.id
-        WHERE p.activo = 1
-      `;
-      let parametros: any[] = [];
+  getAll: async (filtros: FiltrosProducto): Promise<Producto[]> => {
+    const {min_precio, nombre, orden, limite, pagina } = filtros;
 
-      // Filtros dinamicos
-      if(min_precio) {
-        sql += " AND p.precio <= ?";
-        parametros.push(min_precio);
-      }
+    // Paginacion
+    const resPorPagina = Number(limite || 10);
+    const pagActual = Number(pagina || 1);
+    const offset = (pagActual - 1) * resPorPagina;
 
-      if(nombre) {
-        sql += " AND p.nombre LIKE ?";
-        parametros.push(`${nombre}%`);
-      }
+    // Construccion dinamica de orden
+    let orderBy: Prisma.ProductoOrderByWithRelationInput | undefined = undefined;
+    if(orden === 'caro') orderBy = {precio: 'desc'};
+    else if(orden === 'barato') orderBy = {precio: 'asc'};
+    else if(orden === 'nombre') orderBy = {nombre: 'asc'};
 
-      // Ordenamientos
-      if(orden === 'caro') sql += " ORDER BY p.precio DESC";
-      else if(orden === 'barato') sql += " ORDER BY p.precio ASC";
-      else if(orden === 'nombre') sql += " ORDER BY p.nombre ASC";
-
-      // Paginacion
-      const resPorPagina = parseInt(String(limite || 10));
-      const pagActual = parseInt(String(pagina || 1));
-      const offset = (pagActual - 1) * resPorPagina;
-
-      sql += " LIMIT ? OFFSET ?";
-      parametros.push(resPorPagina, offset);
-
-      db.all(sql, parametros, (err, rows) => {
-        if(err) return reject(err);
-        resolve(rows as Producto[]);
-      });
-    });
+    return await prisma.producto.findMany({
+      where: {
+        activo: 1,
+        // Filtros opcionales
+        ...(min_precio && {precio: {lte: Number(min_precio)}}),
+        ...(nombre && {nombre: {startsWith: nombre}})
+      },
+      include:{
+        categoria: true,
+      },
+      ...(orderBy && {orderBy}),
+      take: resPorPagina,
+      skip: offset,
+    })
   },
 
   // Consulta 2: obtener un producto por ID
