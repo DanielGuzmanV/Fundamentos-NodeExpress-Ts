@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import CategoriaService from "../services/categoria.service.js";
+import { AppError } from "../utils/AppError.js";
 
 // Consulta 1: obtener todas las categorias
 export const obtenerCategorias = async (req: Request, res: Response, next: NextFunction) => {
@@ -20,11 +21,18 @@ export const obtenerCategorias = async (req: Request, res: Response, next: NextF
 export const obtenerUnaCat = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const {id} = req.params;
+
+    // Validamos el id exista
+    if(!id || typeof id !== "string") throw new AppError("El parametro ID es requerido", 400);
+
     const categoria = await CategoriaService.ObtenerUnCategoria(id);
 
     res.status(200).json({
       mensaje: "Categoria encontrada",
-      categoria: categoria
+      categoria: {
+        nombre: categoria.nombre,
+        estado: categoria.activo === 1 ? "activo" : "inactivo",
+      }
     })
   } catch (err: any) {
     next(err);

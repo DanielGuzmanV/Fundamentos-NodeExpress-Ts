@@ -5,26 +5,23 @@ const CategoriaService = {
 
   // Obtener todas las categorias
   listarCategorias: async() => {
-    const categorias = await CategoriaModel.getAll();
-
-    return categorias;
+    return await CategoriaModel.getAll();
   },
 
-  // Obtener un categoria
-  ObtenerUnCategoria: async (id: string[] | string | undefined) => {
+  // Obtener una categoria
+  ObtenerUnCategoria: async (id: string | number) => {
     const idNum = Number(id);
-    if(isNaN(idNum)) throw new AppError("ID no valido", 400);
+    if(isNaN(idNum) || idNum <= 0) throw new AppError("ID no valido", 400);
 
     const categoria = await CategoriaModel.getById(idNum);
     if(!categoria) throw new AppError("Categoria no encontrada", 404);
-
-    const {nombre, activo} = categoria;
-    return {nombre, activo};
+    
+    return categoria;
   },
 
   // Crear nueva categoria
   crearNuevaCategoria: async(nombre: string) => {
-    if(!nombre) throw new AppError("El nombre es obligatorio", 400);
+    if(!nombre || nombre.trim() === "") throw new AppError("El nombre es obligatorio", 400);
 
     return await CategoriaModel.create(nombre);
   },
