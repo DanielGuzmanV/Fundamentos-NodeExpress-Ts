@@ -11,7 +11,7 @@ import ventaRoutes from './routes/venta.routes.js';
 // Importacion de middlewares:
 import { logger, jsonSyntaxError, validarContenido } from './middlewares/app.middlewares.js';
 import { errorHandler } from './middlewares/error.handler.js';
-import { inicializarTablas } from './config/init.db.js';
+import db from './config/database.js';
 
 const app = express();
 const PORT = Number(process.env.PORT) || 3000;
@@ -52,7 +52,8 @@ app.use(errorHandler);
 
 async function bootstrap() {
   try {
-    await inicializarTablas();
+    await db.raw('SELECT 1');
+    console.log('Conexion a la base de datos verificada');
     
     app.listen(PORT, () => {
       console.log(`Servidor corriendo en http://localhost:${PORT}`)
