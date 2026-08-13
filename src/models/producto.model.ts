@@ -7,33 +7,41 @@ const ProductoModel = {
 
   // Consulta 1: obtener todos los productos con filtros
   getAll: async (filtros: FiltrosProducto): Promise<Producto[]> => {
-    const {min_precio, nombre, orden, limite, pagina } = filtros;
+    const {min_precio, nombre, orden, limite, pagina} = filtros;
 
-    // Paginacion
+    // 1. Tipado estricto para las condiciones WHERE
+    const whereCondition: Prisma.ProductoWhereInput = { activo: 1 };
+
+    if(min_precio){
+      whereCondition.precio = { lte: Number(min_precio) } // Es igual: <=
+    }
+
+    if(nombre){
+      whereCondition.nombre = {startsWith: nombre} // Es igual: LIKE 'nombre%'
+    }
+
+    // 2. Paginacion
     const resPorPagina = Number(limite || 10);
     const pagActual = Number(pagina || 1);
-    const offset = (pagActual - 1) * resPorPagina;
+    const skip = (pagActual - 1) * resPorPagina;
 
-    // Construccion dinamica de orden
-    let orderBy: Prisma.ProductoOrderByWithRelationInput | undefined = undefined;
-    if(orden === 'caro') orderBy = {precio: 'desc'};
-    else if(orden === 'barato') orderBy = {precio: 'asc'};
-    else if(orden === 'nombre') orderBy = {nombre: 'asc'};
-
-    return await prisma.producto.findMany({
-      where: {
-        activo: 1,
-        // Filtros opcionales
-        ...(min_precio && {precio: {lte: Number(min_precio)}}),
-        ...(nombre && {nombre: {startsWith: nombre}})
-      },
-      include:{
-        categoria: true,
-      },
-      ...(orderBy && {orderBy}),
+    // 3. Objeto base de opciones para prisma
+    const queryOptions: Prisma.ProductoFindManyArgs = {
+      where: whereCondition,
       take: resPorPagina,
-      skip: offset,
-    })
+      skip: skip,
+      include: {
+        categoria: true,
+      }
+    }
+
+    // 4. Se asigna orderBy solo si se solicita un orden
+    if(orden === 'caro') queryOptions.orderBy = {precio: 'desc'};
+    else if(orden === 'barato') queryOptions.orderBy = {precio: 'asc'};
+    else if(orden === 'nombre') queryOptions.orderBy = {nombre: 'asc'};
+
+    // 5. Ejecutamos la consulta con un tipo unificado
+    return await prisma.producto.findMany(queryOptions);
   },
 
   // Consulta 2: obtener un producto por ID
