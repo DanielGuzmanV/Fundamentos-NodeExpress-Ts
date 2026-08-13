@@ -5,48 +5,48 @@ import { FiltrosProducto } from '../types/productos.js';
 const ProductoModel = {
 
   // Consulta 1: obtener todos los productos con filtros
-  getAll: (filtros: FiltrosProducto): Promise<Producto[]> => {
-    return new Promise((resolve, reject) => {
-      const {min_precio, nombre, orden, limite, pagina } = filtros;
-      
-      // Obtenemos todos los productos que estan activos
-      let sql = `
-        SELECT p.*, c.nombre AS categoria_nombre
-        FROM productos p
-        LEFT JOIN categorias c ON p.categoria_id = c.id
-        WHERE p.activo = 1
-      `;
-      let parametros: any[] = [];
+  getAll: async (filtros: FiltrosProducto): Promise<Producto[]> => {
+    const {min_precio, nombre, orden, limite, pagina } = filtros;
 
-      // Filtros dinamicos
-      if(min_precio) {
-        sql += " AND p.precio <= ?";
-        parametros.push(min_precio);
-      }
+    // 1. Iniciamos la consulta base con knex (Query Builder)
+    const query = db('productos as p')
+      .select(
+        'p.*',
+        'c.nombre as categoria_nombre',
+        'f.nombre as fabricante_nombre'
+      )
+      .leftJoin('categorias as c', 'p.id_categoria', 'c.id')
+      .leftJoin('fabricante as f', 'p.id_fabricante', 'f.id')
+      .where('p.activo', 1);
 
-      if(nombre) {
-        sql += " AND p.nombre LIKE ?";
-        parametros.push(`${nombre}%`);
-      }
+    // 2. Filtros dinamicos
+    if(min_precio){
+      query.where('p.precio', '>=', min_precio);
+    }
 
-      // Ordenamientos
-      if(orden === 'caro') sql += " ORDER BY p.precio DESC";
-      else if(orden === 'barato') sql += " ORDER BY p.precio ASC";
-      else if(orden === 'nombre') sql += " ORDER BY p.nombre ASC";
+    if(nombre){
+      query.where('p.nombre', 'like', `%${nombre}%`);
+    }
 
-      // Paginacion
-      const resPorPagina = parseInt(String(limite || 5));
-      const pagActual = parseInt(String(pagina || 1));
-      const offset = (pagActual - 1) * resPorPagina;
+    // 3. Ordenamiento
+    if(orden === 'caro') {
+      query.orderBy('p.precio', 'desc');
+    } else if(orden === 'barato') {
+      query.orderBy('p.precio', 'asc');
+    } else if(orden === 'nombre') {
+      query.orderBy('p.nombre', 'asc');
+    }
 
-      sql += " LIMIT ? OFFSET ?";
-      parametros.push(resPorPagina, offset);
+    // 4. Paginacion con '.limit()' y '.offset()'
+    const resPorPagina = Number(limite) || 5;
+    const pagActual = Number(pagina) || 1;
+    const offset = (pagActual - 1) * resPorPagina;
 
-      db.all(sql, parametros, (err, rows) => {
-        if(err) return reject(err);
-        resolve(rows as Producto[]);
-      });
-    });
+    query.limit(resPorPagina).offset(offset);
+
+    // 5. Ejecutamos la consulta y retornamos el resultado directo
+    const productos = await query;
+    return productos as Producto[];
   },
 
   // Consulta 2: obtener un producto por ID
