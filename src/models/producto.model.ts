@@ -45,6 +45,19 @@ const ProductoModel = {
   },
 
   // Consulta 2: obtener un producto por ID
+  getByIds: async(id: number): Promise<Producto | null> => {
+    return await prisma.producto.findFirst({
+      where: {
+        id,
+        activo: 1,
+      },
+      include: {
+        categoria: true,
+      }
+    })
+  },
+
+  // Analizar y preguntar varias cosas sobre la consulta 1 y 2
   getById:(id: number): Promise<Producto | undefined> => {
     return new Promise((resolve, reject) => {
       const sql = `
