@@ -1,3 +1,4 @@
+import { id } from 'zod/locales';
 import db from '../config/database.js';
 import { Producto } from '../types/index.js';
 import { FiltrosProducto } from '../types/productos.js';
@@ -50,43 +51,38 @@ const ProductoModel = {
   },
 
   // Consulta 2: obtener un producto por ID
-  getById:(id: number): Promise<Producto | undefined> => {
-    return new Promise((resolve, reject) => {
-      const sql = `
-        SELECT p.*, c.nombre AS categoria
-        FROM productos p
-        LEFT JOIN categorias c ON p.categoria_id = c.id
-        WHERE p.id = ? AND p.activo = 1
-      `;
-      db.get(sql, [id], (err, row) => {
-        if(err) return reject(err);
-        resolve(row as Producto);
-      });
-    });
+  getById: async (id: number): Promise<Producto | undefined> => {
+    const fila = await db<Producto>('productos as p')
+      .select(
+        'p.*',
+        'c.nombre as categoria',
+      )
+      .leftJoin('categorias as c', 'p.id_categoria', 'c.id')
+      .where('p.id','=', id).andWhere('p.activo', '=', 1)
+      .first();
+
+    return fila;
   },
 
-  // Consulta para buscar producto por nombre exacto
-  getByName: (nombre: string): Promise<Producto | undefined> => {
-    return new Promise((resolve, reject) => {
-      const sql = "SELECT * FROM productos WHERE nombre = ? AND activo = 1";
-      db.get(sql, [nombre], (err, row) => {
-        if(err) return reject(err);
-        resolve(row as Producto | undefined);
-      })
-    })
+  // Consulta 3: para buscar producto por nombre exacto
+  getByName: async(nombre: string): Promise<Producto | undefined> => {
+    const fila = await db<Producto>('productos')
+      .where('nombre', nombre)
+      .andWhere('activo', 1)
+      .first();
+
+    return fila;
   },
 
-  // Consulta 3: agregar un nuevo producto
-  create: (producto: Producto): Promise<number> => {
-    return new Promise((resolve, reject) => {
-      const {nombre, precio, stock, categoria_id} = producto;
-      const sql = "INSERT INTO productos (nombre, precio, stock, categoria_id) VALUES (?, ?, ?, ?)";
+  // Consulta 4: agregar un nuevo producto
+  create: async(producto: Omit<Producto, 'id'>): Promise<number | undefined> => {
+    const {nombre, precio, stock, id_categoria, id_fabricante} = producto
 
-      db.run(sql, [nombre, precio, stock, categoria_id], function(err) {
-        if(err) return reject(err);
-        resolve(this.lastID);
-      });
+    const [nuevoId] = await db('productos').insert({
+      nombre, precio, stock, id_categoria, id_fabricante, activo: 1
     });
+
+    return nuevoId;
   },
 
   // Consulta 4: actualizar los datos del producto
