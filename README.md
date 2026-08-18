@@ -110,3 +110,19 @@ Esto escribe todos los archivos de tipos de TypeScript necesarios dentro del dir
 ### 7\. Inicialización Global del Cliente (`src/config/prisma.ts`)
 
 Se configuró la instancia del cliente utilizando módulos de ECMAScript (ESM), por lo que es obligatorio especificar la extensión `.js` en la importación relativa
+
+
+## Solucionar errores de dependencias en la rama (feature/practica-prisma)
+
+Verificar el `package.json`, que este en la version: `"better-sqlite3": "12.11.1”` para evitar errores y luego ejecutar los siguientes comandos:
+
+1. **Instala los paquetes de la rama:**
+   ```bash
+   pnpm install
+
+
+2. **Genera los tipos de Prisma:**
+   (cada vez que vuelvas a la rama de Prisma debes ejecutar esto porque la carpeta generada se limpia con la instalación):
+
+   ```bash
+   npx prisma generate
