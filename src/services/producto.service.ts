@@ -1,8 +1,8 @@
 import ProductoModel from "../models/producto.model.js";
 import CategoriaModel from "../models/categoria.model.js";
-import { Producto } from "../types/index.js";
 import { FiltrosProducto } from "../types/productos.js";
 import { AppError } from "../utils/AppError.js";
+import { Producto } from "../generated/prisma/index.js";
 
 const ProductoService = {
 
@@ -72,8 +72,12 @@ const ProductoService = {
 
   // Creacion de producto con validacion de negocio
   crearNuevoProducto: async(datos: Producto) => {
-    // Verificamos si la categoria existe:
-    const existeCat = await CategoriaModel.getById(datos.categoria_id);
+    // Verificamos si el id de categoria no es null
+    const idNumber = Number(datos.categoria_id);
+    if(isNaN(idNumber)) throw new AppError("ID categoria no valido", 400)
+
+    // Verificamos si la categoria existe:  
+    const existeCat = await CategoriaModel.getById(idNumber);
     if(!existeCat) throw new AppError("La categoria especificada no existe en el sistema", 404);
 
     // Verificamos si el nombre ya existe:
@@ -84,6 +88,10 @@ const ProductoService = {
   },
 
   actualizarProducto: async(id: number, datos: Producto) => {
+     // Verificamos si el id de categoria no es null
+    const idNumber = Number(datos.categoria_id);
+    if(isNaN(idNumber)) throw new AppError("ID categoria no valido", 400)
+
     // Verificamos si el producto existe:
     const productoActual = await ProductoModel.getById(id);
     if(!productoActual) throw new AppError("El producto que intentas editar no existe.", 404);
@@ -95,7 +103,7 @@ const ProductoService = {
     }
 
     // Verificamos que la categoria actualizada exista:
-    const existeCat = await CategoriaModel.getById(datos.categoria_id);
+    const existeCat = await CategoriaModel.getById(idNumber);
     if(!existeCat) throw new AppError("La categoría especificada no es válida.", 404);
 
     return await ProductoModel.update(id, datos);
