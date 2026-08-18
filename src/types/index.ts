@@ -10,5 +10,6 @@ export interface Producto {
   precio: number;
   stock: number;
   activo?: number;
-  categoria_id: number;
+  id_categoria: number;
+  id_fabricante: number;
 }
