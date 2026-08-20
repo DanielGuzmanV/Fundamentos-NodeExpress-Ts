@@ -103,6 +103,8 @@ const ProductoService = {
 
   // Services para validar y actualizar parcialmente un producto
   actualizarParcial: async (id: number, campos: Partial<Producto>) => {
+    if(Object.keys(campos).length === 0) throw new AppError("El producto enviado esta vacio", 404)
+
     const productoActual = await ProductoModel.getById(id);
     if(!productoActual) throw new AppError("No se encontro el producto para actualizar.", 404);
 
