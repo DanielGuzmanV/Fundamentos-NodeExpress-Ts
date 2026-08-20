@@ -89,10 +89,10 @@ const ProductoService = {
 
   actualizarProducto: async(id: number, datos: Producto) => {
      // Verificamos si el id de categoria no es null
-    const idNumber = Number(datos.categoria_id);
-    if(isNaN(idNumber)) throw new AppError("ID categoria no valido", 400)
+    const idCatNumber = Number(datos.categoria_id);
+    if(isNaN(idCatNumber)) throw new AppError("ID categoria no valido", 400)
 
-    // Verificamos si el producto existe:
+    // Verificamos si el producto existe y esta activo:
     const productoActual = await ProductoModel.getById(id);
     if(!productoActual) throw new AppError("El producto que intentas editar no existe.", 404);
 
@@ -103,7 +103,7 @@ const ProductoService = {
     }
 
     // Verificamos que la categoria actualizada exista:
-    const existeCat = await CategoriaModel.getById(idNumber);
+    const existeCat = await CategoriaModel.getById(idCatNumber);
     if(!existeCat) throw new AppError("La categoría especificada no es válida.", 404);
 
     return await ProductoModel.update(id, datos);
