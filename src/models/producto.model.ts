@@ -85,106 +85,74 @@ const ProductoModel = {
     return nuevoId;
   },
 
-  // Consulta 4: actualizar los datos del producto
-  update: (id: number, datos: Producto): Promise<number> => {
-    return new Promise((resolve, reject) => {
-      const {nombre, precio, stock, categoria_id} = datos;
+  // Consulta 5: actualizar los datos del producto
+  update: async (id:number, datos: Omit<Producto, 'id'>): Promise<number> => {
+    const {nombre, precio, stock, id_categoria, id_fabricante} = datos;
 
-      const sql = `
-        UPDATE productos SET
-        nombre = ?,
-        precio = ?,
-        stock = ?,
-        categoria_id = ?
-        WHERE id = ? AND activo = 1
-      `;
-
-      db.run(sql, [nombre, precio, stock, categoria_id, id], function(err) {
-        if(err) return reject(err);
-        resolve(this.changes)
-      })
-    })
+    const fila = await db('productos')
+      .where('id', id)
+      .andWhere('activo', 1)
+      .update({nombre, precio, stock, id_categoria, id_fabricante});
+    
+      return fila;
   },
 
-  // Consulta 5: actualizar un dato en especifico
-  updatePartial: (id: number, campos: Partial<Producto>): Promise<number> => {
-    return new Promise((resolve, reject) => {
-      const keys = Object.keys(campos);
-
-      if(keys.length === 0) return reject(new Error("NO_FIELDS_TO_UPDATE"));
-
-      const setSql = keys.map(key => `${key} = ?`).join(", ");
-      const valores = Object.values(campos);
-      valores.push(id);
-
-      const sql = `UPDATE productos SET ${setSql} WHERE id = ? AND activo = 1`;
-
-      db.run(sql, valores, function(err) {
-        if(err) return reject(err);
-        resolve(this.changes);
-      })
-    })
+  // Consulta 6: actualizar un dato en especifico
+  updatePartial: async (id:number, campos: Partial<Producto>): Promise<number> => {
+    const filas = await db('productos')
+      .where('id', id)
+      .andWhere('activo', 1)
+      .update(campos);
+    
+    return filas;
   },
 
-  // consulta 6: ocultar un producto
-  updateState: (id: number): Promise<number> => {
-    return new Promise((resolve, reject) => {
-      const sql = "UPDATE productos SET activo = 0 WHERE id = ?";
+  // consulta 7: ocultar un producto
+  updateState: async (id: number): Promise<number> => {
+    const filas = await db('productos')
+      .where('id', id)
+      .andWhere('activo', 1)
+      .update({activo: 0});
 
-      db.run(sql, [id], function(err) {
-        if(err) return reject(err);
-        resolve(this.changes);
-      })
-    })
+    return filas;
   },
 
-  // Consulta 7: buscar cualquier producto (activo o no)
-  getAnyById: (id: number): Promise<Producto | undefined> => {
-    return new Promise((resolve, reject) => {
-      const sql = `
-        SELECT p.*, c.nombre AS categoria
-        FROM productos p
-        LEFT JOIN categorias c ON p.categoria_id = c.id
-        WHERE p.id = ?
-      `;
-      db.get(sql, [id], (err, row) => {
-        if(err) return reject(err);
-        resolve(row as Producto | undefined);
-      })
-    })
+  // Consulta 8: buscar cualquier producto (activo o no)
+  getAnyById: async(id: number): Promise<Producto | undefined> => {
+    const filas = await db<Producto>('productos as p')
+      .select(
+        'p.*',
+        'c.nombre as categoria'
+      )
+      .leftJoin('categoria as c', 'p.id_categoria', 'c.id')
+      .where('p.id', id)
+      .first();
+
+    return filas
   },
 
-  // Consulta 8: cambiar activo a 1 un producto ocultado
-  restoreState: (id: number): Promise<number> => {
-    return new Promise((resolve, reject) => {
-      const sql = "UPDATE productos SET activo = 1 WHERE id = ?";
-      db.run(sql, [id], function(err) {
-        if(err) return reject(err);
-        resolve(this.changes);
-      })
-    })
+  // Consulta 9: cambiar activo a 1 un producto ocultado
+  restoreState: async (id:number): Promise<number> => {
+    const fila = await db('productos')
+      .where('id', id)
+      .update({activo: 1});
+    
+    return fila;
   },
 
-  // Consulta 9: Borrar un producto permanentemente por id
-  delete: (id: number): Promise<number> => {
-    return new Promise((resolve, reject) => {
-      const sql = "DELETE FROM productos WHERE id = ?";
-      db.run(sql, [id], function(err) {
-        if(err) return reject(err);
-        resolve(this.changes);
-      })
-    })
+  // Consulta 10: Borrar un producto permanentemente por id
+  delete: async (id:number): Promise<number> => {
+    const fila = await db('productos')
+      .where('id', id)
+      .delete();
+
+    return fila;
   },
 
-  // Consulta 10: Borrar todos los productos de la db
-  deleteAll: (): Promise<number> => {
-    return new Promise((resolve, reject) => {
-      const sql = "DELETE FROM productos";
-      db.run(sql, [], function(err) {
-        if(err) return reject(err);
-        resolve(this.changes);
-      })
-    })
+  // Consulta 11: Borrar todos los productos de la db
+  deleteAll: async(): Promise<number> => {
+    const filas = await db('productos').del();
+    return filas;
   }
 
 }
