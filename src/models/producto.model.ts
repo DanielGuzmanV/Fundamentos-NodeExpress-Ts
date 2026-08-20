@@ -79,107 +79,62 @@ const ProductoModel = {
   },
 
   // Consulta 5: actualizar los datos del producto
-  update: (id: number, datos: Producto): Promise<number> => {
-    return new Promise((resolve, reject) => {
-      const {nombre, precio, stock, categoria_id} = datos;
+  update: async(id: number, datos: Omit<Producto, 'id'>): Promise<Producto> => {
+    const {nombre, precio, stock, categoria_id} = datos;
 
-      const sql = `
-        UPDATE productos SET
-        nombre = ?,
-        precio = ?,
-        stock = ?,
-        categoria_id = ?
-        WHERE id = ? AND activo = 1
-      `;
+    return await prisma.producto.update({
+      where: { id: id },
+      data: {
+        nombre, precio, stock, categoria_id
+      },
+    })
 
-      db.run(sql, [nombre, precio, stock, categoria_id, id], function(err) {
-        if(err) return reject(err);
-        resolve(this.changes)
-      })
+  },
+
+  // Consulta 6: actualizar un dato en especifico
+  updatePartial: async(id:number, campos: Prisma.ProductoUpdateInput): Promise<Producto> => {
+    return await prisma.producto.update({
+      where: {id: id},
+      data: campos
     })
   },
 
-  // Consulta 5: actualizar un dato en especifico
-  updatePartial: (id: number, campos: Partial<Producto>): Promise<number> => {
-    return new Promise((resolve, reject) => {
-      const keys = Object.keys(campos);
-
-      if(keys.length === 0) return reject(new Error("NO_FIELDS_TO_UPDATE"));
-
-      const setSql = keys.map(key => `${key} = ?`).join(", ");
-      const valores = Object.values(campos);
-      valores.push(id);
-
-      const sql = `UPDATE productos SET ${setSql} WHERE id = ? AND activo = 1`;
-
-      db.run(sql, valores, function(err) {
-        if(err) return reject(err);
-        resolve(this.changes);
-      })
+  // consulta 7: ocultar un producto
+  updateState: async (id: number): Promise <Producto> => {
+    return await prisma.producto.update({
+      where: { id: id },
+      data: { activo: 0 }
     })
   },
 
-  // consulta 6: ocultar un producto
-  updateState: (id: number): Promise<number> => {
-    return new Promise((resolve, reject) => {
-      const sql = "UPDATE productos SET activo = 0 WHERE id = ?";
-
-      db.run(sql, [id], function(err) {
-        if(err) return reject(err);
-        resolve(this.changes);
-      })
+  // Consulta 8: buscar cualquier producto (activo o no)
+  getAnyById: async (id: number): Promise<Producto | null> => {
+    return await prisma.producto.findUnique({
+      where: {id: id},
+      include: {categoria: true}
     })
   },
 
-  // Consulta 7: buscar cualquier producto (activo o no)
-  getAnyById: (id: number): Promise<Producto | undefined> => {
-    return new Promise((resolve, reject) => {
-      const sql = `
-        SELECT p.*, c.nombre AS categoria
-        FROM productos p
-        LEFT JOIN categorias c ON p.categoria_id = c.id
-        WHERE p.id = ?
-      `;
-      db.get(sql, [id], (err, row) => {
-        if(err) return reject(err);
-        resolve(row as Producto | undefined);
-      })
+  // Consulta 9: cambiar activo a 1 un producto ocultado
+  restoreState: async (id:number): Promise<Producto> => {
+    return await prisma.producto.update({
+      where: {id: id},
+      data: {activo: 1}
     })
   },
 
-  // Consulta 8: cambiar activo a 1 un producto ocultado
-  restoreState: (id: number): Promise<number> => {
-    return new Promise((resolve, reject) => {
-      const sql = "UPDATE productos SET activo = 1 WHERE id = ?";
-      db.run(sql, [id], function(err) {
-        if(err) return reject(err);
-        resolve(this.changes);
-      })
+  // Consulta 10: Borrar un producto permanentemente por id
+  delete: async (id: number): Promise<Producto> => {
+    return await prisma.producto.delete({
+      where: {id: id}
     })
   },
 
-  // Consulta 9: Borrar un producto permanentemente por id
-  delete: (id: number): Promise<number> => {
-    return new Promise((resolve, reject) => {
-      const sql = "DELETE FROM productos WHERE id = ?";
-      db.run(sql, [id], function(err) {
-        if(err) return reject(err);
-        resolve(this.changes);
-      })
-    })
+  // Consulta 11: Borrar todos los productos de la db
+  deleteAll: async (): Promise<number> => {
+    const result = await prisma.producto.deleteMany({})
+    return result.count;
   },
-
-  // Consulta 10: Borrar todos los productos de la db
-  deleteAll: (): Promise<number> => {
-    return new Promise((resolve, reject) => {
-      const sql = "DELETE FROM productos";
-      db.run(sql, [], function(err) {
-        if(err) return reject(err);
-        resolve(this.changes);
-      })
-    })
-  }
-
 }
 
 export default ProductoModel;
