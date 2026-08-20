@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import { Producto } from "../types/index.js";
+import { Producto } from "../generated/prisma/index.js";
 import ProductoService from "../services/producto.service.js";
 
 // Consulta 1: Obtener todos
