@@ -1,0 +1,104 @@
+openapi: 3.0.0
+info:
+  title: API de Productos y Categorías
+  description: Documentación de la API REST usando Express, TypeScript y Prisma.
+  version: 1.0.0
+servers:
+  - url: http://localhost:4000/
+    description: Servidor Local
+
+tags:
+  - name: Categorias
+    description: Endpoints para la gestion de categorias
+  - name: Productos
+    description: Endpoints para la gestion de productos
+
+paths:
+  /categorias:
+    get: 
+      tags:
+        - Categorias
+      summary: Obtener todas las categorias activas
+      responses:
+        '200':
+          description: Lista de las categorias obtenidas correctamente
+          content: 
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Categoria'
+
+  /productos:
+    get:
+      tags:
+        - Productos
+      summary: Obtener todos los productos activos
+      responses:
+        '200':
+          description: Lista de productos obtenida correctamente
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Producto'
+
+  /productos/{id}:
+    get:
+      tags:
+        - Productos
+      summary: Obtener un producto por ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: ID del producto
+      responses:
+        '200':
+          description: Producto encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Producto'
+        '404':
+          description: Producto no encontrado
+
+components:
+  schemas:
+    Producto:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        nombre:
+          type: string
+          example: "Teclado Mecánico"
+        precio:
+          type: number
+          example: 49.99
+        stock:
+          type: integer
+          example: 15
+        activo:
+          type: integer
+          example: 1
+        categoria_id:
+          type: integer
+          example: 2
+        
+    Categoria:
+      type: object
+      properties:
+        id: 
+          type: integer
+          example: 1
+        nombre:
+          type: string
+          example: "Electronica"
+        activo:
+          type: integer
+          example: 1
