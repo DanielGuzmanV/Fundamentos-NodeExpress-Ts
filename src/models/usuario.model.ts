@@ -1,23 +1,17 @@
 import db from "../config/database.js";
-import { User } from "../types/user.js";
+import { User, Users } from "../types/user.js";
 
 export const UsuarioModel = {
 
   // Obtener todos los usuarios
-  getAll: async (): Promise<User[]> => {
-    return new Promise((resolve, reject) => {
-      const sql = `
-        SELECT id, username, nombre, apellido, email, telefono, rol, activo, fecha_creacion 
-        FROM usuarios 
-        WHERE activo = 1
-        ORDER BY id DESC
-      `;
+  getAll: async (): Promise<Users[]> => {
+    const usuarios = await db<Users>('usuarios')
+      .select(
+        'id', 'nombre','apellido','email','telefono','rol','activo','fecha_creacion')
+      .where('activo', 1)
+      .orderBy('id', 'desc');
 
-      db.all(sql, [], (err, rows) => {
-        if(err) return reject(err);
-        resolve(rows as User[]);
-      })
-    })
+    return usuarios;
   },
 
   // Crear un nuevo usuario:
