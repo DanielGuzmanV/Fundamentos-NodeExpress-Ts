@@ -5,6 +5,7 @@ import { User, UserPayload } from "../types/user.js";
 import { registrarUsuarioSchema, updateEmailSchema, updatePasswordSchema } from "../schemas/user.schema.js";
 import { email, ZodError } from "zod";
 import { AppError } from "../utils/AppError.js";
+import { Usuario } from "../generated/prisma/index.js";
 
 const UsuarioServices = {
 
@@ -32,12 +33,12 @@ const UsuarioServices = {
   },
 
   // Registrar un nuevo usuario:
-  registrarUsuario: async (datos: User) => {
+  registrarUsuario: async (datos: Usuario) => {
 
     // Validar los datos de entrada de zod
-    let validatedDatos: User;
+    let validatedDatos: Usuario;
     try {
-      validatedDatos = registrarUsuarioSchema.parse(datos) as User;
+      validatedDatos = registrarUsuarioSchema.parse(datos) as Usuario;
     } catch (error: unknown) {
       if(error instanceof ZodError) {
         const errorMessage = error.issues.length > 0
@@ -63,20 +64,22 @@ const UsuarioServices = {
     const saltRounds = 10;
     const hashedPassword = await bcrypt.hash(password, saltRounds);
 
-    const resultado = await UsuarioModel.create({
+    const datosVerifcados: Omit<Usuario, 'id' | 'activo' | 'fecha_creacion'> = {
       username,
       password: hashedPassword,
       nombre,
       apellido,
       email,
       telefono,
-      rol: rol || 'vendedor'
-    })
+      rol
+    } 
+
+    const resultado = await UsuarioModel.create(datosVerifcados)
 
     // Retornar la informacion del usuario creado
     return {
       id: resultado.id,
-      username, 
+      username: resultado.username, 
       rol: rol || 'vendedor'
     }
   },

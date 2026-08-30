@@ -1,38 +1,26 @@
 import db from "../config/database.js";
+import prisma from "../config/prisma.js";
+import { Usuario } from "../generated/prisma/index.js";
 import { User } from "../types/user.js";
 
 export const UsuarioModel = {
 
   // Obtener todos los usuarios
-  getAll: async (): Promise<User[]> => {
-    return new Promise((resolve, reject) => {
-      const sql = `
-        SELECT id, username, nombre, apellido, email, telefono, rol, activo, fecha_creacion 
-        FROM usuarios 
-        WHERE activo = 1
-        ORDER BY id DESC
-      `;
-
-      db.all(sql, [], (err, rows) => {
-        if(err) return reject(err);
-        resolve(rows as User[]);
-      })
+  getAll: async(): Promise<Usuario[]> => {
+    return await prisma.usuario.findMany({
+      where: {activo: 1},
+      orderBy: {id: 'desc'}
     })
   },
-
+  
   // Crear un nuevo usuario:
-  create: async (datos: User): Promise<{id: number}> => {
+  create: async (datos: Omit<Usuario, 'id' | 'activo' | 'fecha_creacion'>): Promise<Usuario> => {
     const {username, password, nombre, apellido, email, telefono, rol} = datos;
-    return new Promise((resolve, reject) => {
-      const sql = `
-        INSERT INTO usuarios (username, password, nombre, apellido, email, telefono, rol) 
-        VALUES (?, ?, ?, ?, ?, ?, ?)
-      `;
-
-      db.run(sql, [username, password, nombre, apellido, email, telefono, rol || 'vendedor'], function(err) {
-        if(err) return reject(err);
-        resolve({id: this.lastID});
-      })
+    
+    return await prisma.usuario.create({
+      data: {
+        username, password, nombre, apellido, email, telefono, rol: rol || 'vendedor'
+      }
     })
   },
 
