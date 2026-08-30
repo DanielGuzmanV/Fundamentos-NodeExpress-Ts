@@ -1,8 +1,7 @@
 import express, { type Request, type Response} from 'express';
 import dotenv from 'dotenv';
 import swaggerUi from 'swagger-ui-express';
-import YAML from 'yamljs';
-import path from 'node:path';
+import { swaggerSpec } from './config/swagger.js';
 dotenv.config();
 
 // Importacion de rutas:
@@ -20,8 +19,6 @@ const PORT = Number(process.env.PORT) || 3000;
 
 app.use(express.json());
 
-// Cargar especificacion YAML
-const swaggerDocument = YAML.load(path.join(process.cwd(), 'src/docs/swagger.yaml'))
 
 // Uso de los middlewares
 app.use(logger);
@@ -35,7 +32,7 @@ app.use('/auth', usuarioRoutes);
 app.use('/ventas', ventaRoutes);
 
 // --- Endpoint interactivo para la documentacion
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument))
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec))
 
 // ==================================================
 app.get('/', (req: Request, res: Response) => {
