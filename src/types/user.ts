@@ -4,7 +4,7 @@ export interface Users {
   apellido: string;
   email: string;
   telefono: string;
-  password_hash?: string;
+  password_hash: string;
   rol?: string;
   activo?: number;
   fecha_creacion?: string;
