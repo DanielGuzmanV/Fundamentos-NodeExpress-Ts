@@ -1,7 +1,5 @@
-import { ro } from "zod/locales";
 import db from "../config/database.js";
-import { User, Users } from "../types/user.js";
-import { email } from "zod";
+import { Users } from "../types/user.js";
 
 export const UsuarioModel = {
 
