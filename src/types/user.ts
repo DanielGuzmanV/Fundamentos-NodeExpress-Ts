@@ -1,15 +1,14 @@
-export interface User {
+export interface Users {
   id?: number;
-  username: string;
-  password: string;
   nombre: string;
   apellido: string;
   email: string;
-  telefono: string
+  telefono: string;
+  password_hash: string;
   rol?: string;
   activo?: number;
   fecha_creacion?: string;
-};
+}
 
 export interface UserPayload {
   id: number;

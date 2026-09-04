@@ -11,6 +11,7 @@ import ventaRoutes from './routes/venta.routes.js';
 // Importacion de middlewares:
 import { logger, jsonSyntaxError, validarContenido } from './middlewares/app.middlewares.js';
 import { errorHandler } from './middlewares/error.handler.js';
+import db from './config/database.js';
 
 const app = express();
 const PORT = Number(process.env.PORT) || 3000;
@@ -45,6 +46,22 @@ app.use((req: Request, res: Response) => {
 // Middleware de manejo de errores global
 app.use(errorHandler);
 
-app.listen(PORT, () => {
-  console.log(`Servidor corriendo en http://localhost:${PORT}`)
-})
+// ==================================================
+// Inicialización segura del servidor y la base de datos
+// ==================================================
+
+async function bootstrap() {
+  try {
+    await db.raw('SELECT 1');
+    console.log('Conexion a la base de datos verificada');
+    
+    app.listen(PORT, () => {
+      console.log(`Servidor corriendo en http://localhost:${PORT}`)
+    })
+  } catch (error) {
+    console.error("Error fatal al iniciar la aplicación:", error);
+    process.exit(1);
+  }
+}
+
+bootstrap();

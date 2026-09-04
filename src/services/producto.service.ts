@@ -73,7 +73,7 @@ const ProductoService = {
   // Creacion de producto con validacion de negocio
   crearNuevoProducto: async(datos: Producto) => {
     // Verificamos si la categoria existe:
-    const existeCat = await CategoriaModel.getById(datos.categoria_id);
+    const existeCat = await CategoriaModel.getById(datos.id_categoria);
     if(!existeCat) throw new AppError("La categoria especificada no existe en el sistema", 404);
 
     // Verificamos si el nombre ya existe:
@@ -95,7 +95,7 @@ const ProductoService = {
     }
 
     // Verificamos que la categoria actualizada exista:
-    const existeCat = await CategoriaModel.getById(datos.categoria_id);
+    const existeCat = await CategoriaModel.getById(datos.id_categoria);
     if(!existeCat) throw new AppError("La categoría especificada no es válida.", 404);
 
     return await ProductoModel.update(id, datos);
@@ -103,6 +103,8 @@ const ProductoService = {
 
   // Services para validar y actualizar parcialmente un producto
   actualizarParcial: async (id: number, campos: Partial<Producto>) => {
+    if(Object.keys(campos).length === 0) throw new AppError("El producto enviado esta vacio", 404)
+
     const productoActual = await ProductoModel.getById(id);
     if(!productoActual) throw new AppError("No se encontro el producto para actualizar.", 404);
 
@@ -111,8 +113,8 @@ const ProductoService = {
       if(duplicado) throw new AppError("El nuevo nombre ya esta en uso.", 400);
     }
 
-    if(campos.categoria_id) {
-      const existeCat = await CategoriaModel.getById(campos.categoria_id);
+    if(campos.id_categoria) {
+      const existeCat = await CategoriaModel.getById(campos.id_categoria);
       if(!existeCat) throw new AppError("La categoria no existe", 404);
     }
 

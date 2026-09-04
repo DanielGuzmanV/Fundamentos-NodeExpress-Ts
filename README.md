@@ -48,7 +48,16 @@ Se reemplazó `ts-node-dev` por **`tsx`** debido a su mejor compatibilidad con E
    ```bash
    pnpm start
 
+## Solucionar errores de depencias en la rama (feature/practica-knex)
 
+1. **(Opcional) Limpia cualquier rastro de tipos antiguos obsoletos**
+   ```bash
+   pnpm remove @types/knex --save-dev
+
+
+2. **Reconstruye el árbol de enlaces virtuales de pnpm para esta rama**4
+   ```bash
+   pnpm install
 
 
 

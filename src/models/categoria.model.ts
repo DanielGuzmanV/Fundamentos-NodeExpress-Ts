@@ -4,119 +4,82 @@ import { Categoria } from '../types/index.js';
 const CategoriaModel = {
 
   // Obtener todas las categorias
-  getAll: (): Promise<Categoria[]> => {
-    return new Promise((resolve, reject) => {
-      const sql = "SELECT * FROM categorias WHERE activo = 1";
-      db.all(sql, [], (err, filas) => {
-        if(err) return reject(err);
-        resolve(filas as Categoria[]);
-      });
-    });
+  getAll: async (): Promise<Categoria[]> => {
+    const filas = await db<Categoria>('categorias')
+      .select('*')
+      .where('activo', 1);
+    
+    return filas;
   },
 
   // Busqueda por Id y verifica si esta activo
-  getById: (id: number): Promise<Categoria | undefined> => {
-    return new Promise((resolve, reject) => {
-      const sql = "SELECT * FROM categorias WHERE id = ? AND activo = 1";
-
-      db.get(sql, [id], (err, row) => {
-        if(err) return reject(err);
-        resolve(row as Categoria | undefined);
-      })
-    })
+  getById: async (id: number): Promise<Categoria | undefined> => {
+    const fila = await db<Categoria>('categorias')
+      .where('id', id)
+      .andWhere('activo', 1)
+      .first();
+    
+    return fila;
   },
-
+  
   // Busqueda por Id
-  getByIdSinFiltro: (id: number): Promise<Categoria | undefined> => {
-    return new Promise((resolve, reject) => {
-      const sql = "SELECT * FROM categorias WHERE id = ? AND activo = 0";
-      db.get(sql, [id], (err, row) => {
-        if(err) return reject(err);
-        resolve(row as Categoria | undefined);
-      })
-    })
-  },
+  getByIdSinFiltro: async (id: number): Promise<Categoria | undefined> => {
+    const fila = await db<Categoria>('categorias')
+      .where('id', id)
+      .andWhere('activo', 0)
+      .first();
 
+    return fila;
+  },
+  
   // Crear una categoria
-  create: (nombre: string): Promise<void> => {
-    return new Promise((resolve, reject) => {
-      const sql = "INSERT INTO categorias (nombre) VALUES (?)";
-      db.run(sql, [nombre], function(err) {
-        if(err) return reject(err);
-        resolve();
-      });
-    });
+  create: async (nombre: string): Promise<void> => {
+    await db('categorias').insert({nombre});
   },
-
+  
   // Actualizar el nombre de una categoria
-  update: (id: number, nuevoNombre: string): Promise<void> => {
-    return new Promise((resolve, reject) => {
-      const sql = "UPDATE categorias SET nombre = ? WHERE id = ?";
-
-      db.run(sql, [nuevoNombre, id], function(err) {
-        if(err) return reject(err);
-        resolve();
-      });
-    });
+  update: async (id: number, nuevoNombre: string): Promise<void> => {
+    await db('categorias')
+    .where('id', id)
+    .update({nombre: nuevoNombre});
   },
-
+  
   // Oculatar una categoria
-  deleteLogical: (id: number): Promise<void> => {
-    return new Promise((resolve, reject) => {
-      const sql = "UPDATE categorias SET activo = 0 WHERE id = ? AND activo = 1";
-      
-      db.run(sql, [id], function(err) {
-        if(err) return reject(err);
-        resolve();
-      })
-    })
+  deleteLogical: async (id: number): Promise<void> => {
+    await db('categorias')
+      .where('id', id)
+      .andWhere('activo', 1)
+      .update({activo: 0});
   },
-
+  
   // Mostrar una categoria ocultada
-  activarCategoria: (id: number): Promise<void> => {
-    return new Promise((resolve, reject) => {
-      const sql = "UPDATE categorias SET activo = 1 WHERE id = ? AND activo = 0";
-
-      db.run(sql, [id], function(err) {
-        if(err) return reject(err);
-        resolve();
-      })
-    })
+  activarCategoria: async (id: number): Promise<void> => {
+    await db('categorias')
+      .where('id', id)
+      .andWhere('activo', 0)
+      .update({activo: 1});
   },
-
-  // Borrar una categoria
-  deleteCategoria: (id: number): Promise<void> => {
-    return new Promise((resolve, reject) => {
-      const sql = "DELETE FROM categorias WHERE id = ?";
-      
-      db.run(sql, [id], function(err) {
-        if(err) return reject(err);
-        resolve();
-      });
-    });
+    
+  // Borrar una categoria (Borrado fisico)
+  deleteCategoria: async (id: number): Promise<void> => {
+    await db('categoria')
+    .where('id', id)
+    .del();
   },
-
+  
   // Contar el total de registros
-  countAll: (): Promise<number> => {
-    return new Promise((resolve, reject) => {
-      const sql = "SELECT COUNT(*) as total FROM categorias";
-        db.get(sql, [], (err, row: any) => {
-          if(err) return reject(err);
-          resolve(row.total)
-        })
-    })
+  countAll: async (): Promise<number> => {
+    const resultado = await db('categorias')
+      .count('* as Total')
+      .first();
+    
+    return resultado ? Number(resultado.total) : 0;
   },
 
   // Eliminar toda la tabla de categorias
-  deleteAll:(): Promise<void> => {
-    return new Promise((resolve, reject) => {
-      const sql = "DELETE FROM categorias";
-      db.run(sql, [], function(err) {
-        if(err) return reject(err);
-        resolve();
-      })
-    })
-  }
+  deleteAll: async (): Promise<void> => {
+    await db('categorias').del();
+  },
 }
 
 export default CategoriaModel;

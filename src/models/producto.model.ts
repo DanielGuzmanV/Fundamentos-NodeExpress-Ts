@@ -1,3 +1,4 @@
+import { id } from 'zod/locales';
 import db from '../config/database.js';
 import { Producto } from '../types/index.js';
 import { FiltrosProducto } from '../types/productos.js';
@@ -5,190 +6,153 @@ import { FiltrosProducto } from '../types/productos.js';
 const ProductoModel = {
 
   // Consulta 1: obtener todos los productos con filtros
-  getAll: (filtros: FiltrosProducto): Promise<Producto[]> => {
-    return new Promise((resolve, reject) => {
-      const {min_precio, nombre, orden, limite, pagina } = filtros;
-      
-      // Obtenemos todos los productos que estan activos
-      let sql = `
-        SELECT p.*, c.nombre AS categoria_nombre
-        FROM productos p
-        LEFT JOIN categorias c ON p.categoria_id = c.id
-        WHERE p.activo = 1
-      `;
-      let parametros: any[] = [];
+  getAll: async (filtros: FiltrosProducto): Promise<Producto[]> => {
+    const {min_precio, nombre, orden, limite, pagina } = filtros;
 
-      // Filtros dinamicos
-      if(min_precio) {
-        sql += " AND p.precio <= ?";
-        parametros.push(min_precio);
-      }
+    // 1. Iniciamos la consulta base con knex (Query Builder)
+    const query = db('productos as p')
+      .select(
+        'p.*',
+        'c.nombre as categoria_nombre',
+        'f.nombre as fabricante_nombre'
+      )
+      .leftJoin('categorias as c', 'p.id_categoria', 'c.id')
+      .leftJoin('fabricante as f', 'p.id_fabricante', 'f.id')
+      .where('p.activo', 1);
 
-      if(nombre) {
-        sql += " AND p.nombre LIKE ?";
-        parametros.push(`${nombre}%`);
-      }
+    // 2. Filtros dinamicos
+    if(min_precio){
+      query.where('p.precio', '>=', min_precio);
+    }
 
-      // Ordenamientos
-      if(orden === 'caro') sql += " ORDER BY p.precio DESC";
-      else if(orden === 'barato') sql += " ORDER BY p.precio ASC";
-      else if(orden === 'nombre') sql += " ORDER BY p.nombre ASC";
+    if(nombre){
+      query.where('p.nombre', 'like', `%${nombre}%`);
+    }
 
-      // Paginacion
-      const resPorPagina = parseInt(String(limite || 10));
-      const pagActual = parseInt(String(pagina || 1));
-      const offset = (pagActual - 1) * resPorPagina;
+    // 3. Ordenamiento
+    if(orden === 'caro') {
+      query.orderBy('p.precio', 'desc');
+    } else if(orden === 'barato') {
+      query.orderBy('p.precio', 'asc');
+    } else if(orden === 'nombre') {
+      query.orderBy('p.nombre', 'asc');
+    }
 
-      sql += " LIMIT ? OFFSET ?";
-      parametros.push(resPorPagina, offset);
+    // 4. Paginacion con '.limit()' y '.offset()'
+    const resPorPagina = Number(limite) || 5;
+    const pagActual = Number(pagina) || 1;
+    const offset = (pagActual - 1) * resPorPagina;
 
-      db.all(sql, parametros, (err, rows) => {
-        if(err) return reject(err);
-        resolve(rows as Producto[]);
-      });
-    });
+    query.limit(resPorPagina).offset(offset);
+
+    // 5. Ejecutamos la consulta y retornamos el resultado directo
+    const productos = await query;
+    return productos as Producto[];
   },
 
   // Consulta 2: obtener un producto por ID
-  getById:(id: number): Promise<Producto | undefined> => {
-    return new Promise((resolve, reject) => {
-      const sql = `
-        SELECT p.*, c.nombre AS categoria
-        FROM productos p
-        LEFT JOIN categorias c ON p.categoria_id = c.id
-        WHERE p.id = ? AND p.activo = 1
-      `;
-      db.get(sql, [id], (err, row) => {
-        if(err) return reject(err);
-        resolve(row as Producto);
-      });
+  getById: async (id: number): Promise<Producto | undefined> => {
+    const fila = await db<Producto>('productos as p')
+      .select(
+        'p.*',
+        'c.nombre as categoria',
+      )
+      .leftJoin('categorias as c', 'p.id_categoria', 'c.id')
+      .where('p.id','=', id).andWhere('p.activo', '=', 1)
+      .first();
+
+    return fila;
+  },
+
+  // Consulta 3: para buscar producto por nombre exacto
+  getByName: async(nombre: string): Promise<Producto | undefined> => {
+    const fila = await db<Producto>('productos')
+      .where('nombre', nombre)
+      .andWhere('activo', 1)
+      .first();
+
+    return fila;
+  },
+
+  // Consulta 4: agregar un nuevo producto
+  create: async(producto: Omit<Producto, 'id'>): Promise<number | undefined> => {
+    const {nombre, precio, stock, id_categoria, id_fabricante} = producto
+
+    const [nuevoId] = await db('productos').insert({
+      nombre, precio, stock, id_categoria, id_fabricante, activo: 1
     });
+
+    return nuevoId;
   },
 
-  // Consulta para buscar producto por nombre exacto
-  getByName: (nombre: string): Promise<Producto | undefined> => {
-    return new Promise((resolve, reject) => {
-      const sql = "SELECT * FROM productos WHERE nombre = ? AND activo = 1";
-      db.get(sql, [nombre], (err, row) => {
-        if(err) return reject(err);
-        resolve(row as Producto | undefined);
-      })
-    })
+  // Consulta 5: actualizar los datos del producto
+  update: async (id:number, datos: Omit<Producto, 'id'>): Promise<number> => {
+    const {nombre, precio, stock, id_categoria, id_fabricante} = datos;
+
+    const fila = await db('productos')
+      .where('id', id)
+      .andWhere('activo', 1)
+      .update({nombre, precio, stock, id_categoria, id_fabricante});
+    
+      return fila;
   },
 
-  // Consulta 3: agregar un nuevo producto
-  create: (producto: Producto): Promise<number> => {
-    return new Promise((resolve, reject) => {
-      const {nombre, precio, stock, categoria_id} = producto;
-      const sql = "INSERT INTO productos (nombre, precio, stock, categoria_id) VALUES (?, ?, ?, ?)";
-
-      db.run(sql, [nombre, precio, stock, categoria_id], function(err) {
-        if(err) return reject(err);
-        resolve(this.lastID);
-      });
-    });
+  // Consulta 6: actualizar un dato en especifico
+  updatePartial: async (id:number, campos: Partial<Producto>): Promise<number> => {
+    const filas = await db('productos')
+      .where('id', id)
+      .andWhere('activo', 1)
+      .update(campos);
+    
+    return filas;
   },
 
-  // Consulta 4: actualizar los datos del producto
-  update: (id: number, datos: Producto): Promise<number> => {
-    return new Promise((resolve, reject) => {
-      const {nombre, precio, stock, categoria_id} = datos;
+  // consulta 7: ocultar un producto
+  updateState: async (id: number): Promise<number> => {
+    const filas = await db('productos')
+      .where('id', id)
+      .andWhere('activo', 1)
+      .update({activo: 0});
 
-      const sql = `
-        UPDATE productos SET
-        nombre = ?,
-        precio = ?,
-        stock = ?,
-        categoria_id = ?
-        WHERE id = ? AND activo = 1
-      `;
-
-      db.run(sql, [nombre, precio, stock, categoria_id, id], function(err) {
-        if(err) return reject(err);
-        resolve(this.changes)
-      })
-    })
+    return filas;
   },
 
-  // Consulta 5: actualizar un dato en especifico
-  updatePartial: (id: number, campos: Partial<Producto>): Promise<number> => {
-    return new Promise((resolve, reject) => {
-      const keys = Object.keys(campos);
+  // Consulta 8: buscar cualquier producto (activo o no)
+  getAnyById: async(id: number): Promise<Producto | undefined> => {
+    const filas = await db<Producto>('productos as p')
+      .select(
+        'p.*',
+        'c.nombre as categoria'
+      )
+      .leftJoin('categoria as c', 'p.id_categoria', 'c.id')
+      .where('p.id', id)
+      .first();
 
-      if(keys.length === 0) return reject(new Error("NO_FIELDS_TO_UPDATE"));
-
-      const setSql = keys.map(key => `${key} = ?`).join(", ");
-      const valores = Object.values(campos);
-      valores.push(id);
-
-      const sql = `UPDATE productos SET ${setSql} WHERE id = ? AND activo = 1`;
-
-      db.run(sql, valores, function(err) {
-        if(err) return reject(err);
-        resolve(this.changes);
-      })
-    })
+    return filas
   },
 
-  // consulta 6: ocultar un producto
-  updateState: (id: number): Promise<number> => {
-    return new Promise((resolve, reject) => {
-      const sql = "UPDATE productos SET activo = 0 WHERE id = ?";
-
-      db.run(sql, [id], function(err) {
-        if(err) return reject(err);
-        resolve(this.changes);
-      })
-    })
+  // Consulta 9: cambiar activo a 1 un producto ocultado
+  restoreState: async (id:number): Promise<number> => {
+    const fila = await db('productos')
+      .where('id', id)
+      .update({activo: 1});
+    
+    return fila;
   },
 
-  // Consulta 7: buscar cualquier producto (activo o no)
-  getAnyById: (id: number): Promise<Producto | undefined> => {
-    return new Promise((resolve, reject) => {
-      const sql = `
-        SELECT p.*, c.nombre AS categoria
-        FROM productos p
-        LEFT JOIN categorias c ON p.categoria_id = c.id
-        WHERE p.id = ?
-      `;
-      db.get(sql, [id], (err, row) => {
-        if(err) return reject(err);
-        resolve(row as Producto | undefined);
-      })
-    })
+  // Consulta 10: Borrar un producto permanentemente por id
+  delete: async (id:number): Promise<number> => {
+    const fila = await db('productos')
+      .where('id', id)
+      .delete();
+
+    return fila;
   },
 
-  // Consulta 8: cambiar activo a 1 un producto ocultado
-  restoreState: (id: number): Promise<number> => {
-    return new Promise((resolve, reject) => {
-      const sql = "UPDATE productos SET activo = 1 WHERE id = ?";
-      db.run(sql, [id], function(err) {
-        if(err) return reject(err);
-        resolve(this.changes);
-      })
-    })
-  },
-
-  // Consulta 9: Borrar un producto permanentemente por id
-  delete: (id: number): Promise<number> => {
-    return new Promise((resolve, reject) => {
-      const sql = "DELETE FROM productos WHERE id = ?";
-      db.run(sql, [id], function(err) {
-        if(err) return reject(err);
-        resolve(this.changes);
-      })
-    })
-  },
-
-  // Consulta 10: Borrar todos los productos de la db
-  deleteAll: (): Promise<number> => {
-    return new Promise((resolve, reject) => {
-      const sql = "DELETE FROM productos";
-      db.run(sql, [], function(err) {
-        if(err) return reject(err);
-        resolve(this.changes);
-      })
-    })
+  // Consulta 11: Borrar todos los productos de la db
+  deleteAll: async(): Promise<number> => {
+    const filas = await db('productos').del();
+    return filas;
   }
 
 }

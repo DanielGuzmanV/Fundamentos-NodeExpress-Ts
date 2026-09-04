@@ -1,209 +1,154 @@
 import db from "../config/database.js";
-import { User } from "../types/user.js";
+import { Users } from "../types/user.js";
 
 export const UsuarioModel = {
 
   // Obtener todos los usuarios
-  getAll: async (): Promise<User[]> => {
-    return new Promise((resolve, reject) => {
-      const sql = `
-        SELECT id, username, nombre, apellido, email, telefono, rol, activo, fecha_creacion 
-        FROM usuarios 
-        WHERE activo = 1
-        ORDER BY id DESC
-      `;
+  getAll: async (): Promise<Omit<Users, 'password_hash'>[]> => {
+    const usuarios = await db<Users>('usuarios')
+      .select(
+        'id', 'nombre','apellido','email','telefono','rol','activo','fecha_creacion')
+      .where('activo', 1)
+      .orderBy('id', 'desc');
 
-      db.all(sql, [], (err, rows) => {
-        if(err) return reject(err);
-        resolve(rows as User[]);
-      })
-    })
+    return usuarios;
   },
 
   // Crear un nuevo usuario:
-  create: async (datos: User): Promise<{id: number}> => {
-    const {username, password, nombre, apellido, email, telefono, rol} = datos;
-    return new Promise((resolve, reject) => {
-      const sql = `
-        INSERT INTO usuarios (username, password, nombre, apellido, email, telefono, rol) 
-        VALUES (?, ?, ?, ?, ?, ?, ?)
-      `;
-
-      db.run(sql, [username, password, nombre, apellido, email, telefono, rol || 'vendedor'], function(err) {
-        if(err) return reject(err);
-        resolve({id: this.lastID});
-      })
+  create: async(datos: Omit<Users, 'id' | 'activo' | 'fecha_creacion'>): Promise<Omit<Users, 'password_hash'>> => {
+    const {nombre, apellido, email, telefono, password_hash, rol} = datos;
+    
+    const [datosUser] = await db<Users>('usuarios').insert({
+      nombre, apellido, email, telefono, password_hash, rol: rol || 'vendedor'
     })
-  },
 
-  // Buscar un usuario por el username para el login
-  getByUsername: async (username: string): Promise<User | undefined> => {
-    return new Promise((resolve, reject) => {
-      const sql = "SELECT * FROM usuarios WHERE username = ? AND activo = 1";
+    const nuevoUsuario = await db<Users>('usuarios')
+      .select('id', 'nombre', 'apellido', 'email', 'telefono', 'rol', 'activo', 'fecha_creacion')
+      .where('id', datosUser)
+      .first();
 
-      db.get(sql, [username], (err, row) => {
-        if(err) return reject(err);
-        resolve(row as User | undefined);
-      })
-    })
+    return nuevoUsuario!;
   },
 
   // Obtener un usuario por el ID
-  getById: async (id: number): Promise<User | undefined> => {
-    return new Promise((resolve, reject) => {
-      const sql = `
-        SELECT id, username, nombre, apellido, email, telefono, rol, activo, fecha_creacion 
-        FROM usuarios WHERE id = ?
-        AND activo = 1
-      `;
+  getById: async (id: number): Promise<Omit<Users, 'password_hash'> | undefined> => {
+    const userData = await db<Users>('usuarios')
+      .select('id', 'nombre','apellido', 'email', 'telefono', 'rol', 'activo', 'fecha_creacion')
+      .where('id', id)
+      .andWhere('activo', 1)
+      .first();
 
-      db.get(sql, [id], (err, row) => {
-        if(err) return reject(err);
-        resolve(row as User | undefined);
-      })
-    })
+    return userData;
   },
 
+
   // Obtener un usuario por el ID incluyendo la contraseña
-  getByIdWithPassword: async (id: number): Promise<User | undefined> => {
-    return new Promise((resolve, reject) => {
-      const sql = `SELECT * FROM usuarios WHERE id = ? AND activo = 1`;
-      db.get(sql, [id], (err, row) => {
-        if(err) return reject(err);
-        resolve(row as User | undefined);
-      })
-    })
+  getByIdWithPassword: async (id: number): Promise<Users | undefined> => {
+    const userData = await db<Users>('usuarios')
+      .select('*')
+      .where('id', id)
+      .andWhere('activo', 1)
+      .first();
+
+    return userData;
   },
 
   // Buscar usuario por el email (para validaciones)
-  getByEmail: async (email: string): Promise<User | undefined> => {
-    return new Promise((resolve, reject) => {
-    const sql = "SELECT * FROM usuarios WHERE email = ? AND activo = 1";
-    db.get(sql, [email], (err, row) => {
-      if(err) return reject(err);
-      resolve(row as User | undefined);
-    });
-  });
+  getByEmail: async (emaiL: string): Promise<Users | undefined> => {
+    const userData = await db<Users>('usuarios')
+      .select('*')
+      .where('email', emaiL)
+      .andWhere('activo', 1)
+      .first();
+    
+    return userData;
   },
 
   // Obtener un usuario por el ID si esta activo o no
-  getByIdNoFilter: async (id: number): Promise<User | undefined> => {
-  return new Promise((resolve, reject) => {
-    const sql = "SELECT * FROM usuarios WHERE id = ?";
-    db.get(sql, [id], (err, row) => {
-      if(err) return reject(err);
-      resolve(row as User | undefined);
-    });
-  });
-},
+  getByIdNoFilter: async (id: number): Promise<Omit<Users, 'password_hash'> | undefined> => {
+    const userData = await db<Users>('usuarios')
+      .select('id', 'nombre', 'apellido', 'email', 'telefono', 'rol', 'activo', 'fecha_creacion')
+      .where('id', id)
+      .first();
+
+    return userData;
+  },
 
   // Actualizar todos los datos generales
-  updateInfo: async (id: number, datos: Partial<User>): Promise<void> => {
-    const {username, nombre, apellido, telefono, rol} = datos;
+  updateInfo: async (id: number, datos: Partial<Users>): Promise<number> => {
+    const {nombre, apellido, telefono, rol} = datos;
 
-    return new Promise((resolve, reject) => {
-      const sql = `
-        UPDATE usuarios SET 
-          username = ?, 
-          nombre = ?,
-          apellido = ?,
-          telefono = ?,
-          rol = ?
-        WHERE id = ? AND activo = 1
-      `;
-
-      db.run(sql, [username, nombre, apellido, telefono, rol, id], function(err) {
-        if(err) return reject(err);
-        resolve();
-      })
-    })
+    const filas = await db('usuarios')
+      .where('id', id)
+      .andWhere('activo', 1)
+      .update({nombre, apellido, telefono, rol});
+    
+    return filas;
   },
 
   // Actualizar algunos datos
-  updatePartial: async (id: number, datos: Partial<User>): Promise<void> => {
-    const { username, nombre, apellido, telefono, rol} = datos;
-    const camposFiltrados: Record<string, any> = { username, nombre, apellido, telefono, rol };
+  updatePartial: async (id: number, datos: Partial<Users>):Promise<number> => {
+    const {id: _, password_hash: __, email: ___, ...camposActualizar } = datos;
 
-    // Filtrar los campos que son undefined
-    const keys = Object.keys(camposFiltrados).filter(
-      (key) => camposFiltrados[key as keyof User] !== undefined
-    );
+    if(Object.keys(camposActualizar).length === 0) {
+      return 0;
+    }
 
-    if(keys.length === 0) return;
-
-    // Construimos el sql dinamico
-    const setClause = keys.map((key) => `${key} = ?`).join(", ");
-    const values = keys.map((key) => camposFiltrados[key as keyof User]);
-    values.push(id);
-
-    return new Promise((resolve, reject) => {
-      const sql = `UPDATE usuarios SET ${setClause} WHERE id = ? AND activo = 1`;
-
-      db.run(sql, values, function(err) {
-        if(err) return reject(err);
-        resolve();
-      })
-    });
+    const filasAfectadas = await db('usuarios')
+      .where('id', id)
+      .andWhere('activo', 1)
+      .update(camposActualizar);
+    
+      return filasAfectadas;
   },
 
   // Actualizar el email del usuario
-  updateEmail: async (id: number, newEmail: string): Promise<void> => {
-    return new Promise((resolve, reject) => {
-      const sql = "UPDATE usuarios SET email = ? WHERE id = ? AND activo = 1";
-
-      db.run(sql, [newEmail, id], function(err) {
-        if(err) return reject(err);
-        resolve();
-      })
-    })
+  updateEmail: async (id: number, newEmail: string): Promise<number> => {
+    const userEmail = await db('usuarios')
+      .where('id', id)
+      .andWhere('activo', 1)
+      .update({email: newEmail});
+    
+    return userEmail;
   },
 
   // Actualizar solo la contraseña 
-  updatePassword: async (id: number, hashedPassword: string): Promise<void> => {
-    return new Promise((resolve, reject) => {
-      const sql = "UPDATE usuarios SET password = ? WHERE id = ?";
-
-      db.run(sql, [hashedPassword, id], function(err) {
-        if(err) return reject(err);
-        resolve();
-      })
-    })
+  updatePassword: async (id: number, hashedPassword: string): Promise<number> => {
+    const userPassword = await db('usuarios')
+      .where('id', id)
+      .andWhere('activo', 1)
+      .update({password_hash: hashedPassword})
+    
+    return userPassword;
   },
 
   // Eliminar (ocultar un usuario) por el ID
-  softDelete: async (id: number): Promise<void> => {
-    return new Promise((resolve, reject) => {
-      const sql = "UPDATE usuarios SET activo = 0 WHERE id = ? AND activo = 1";
-
-      db.run(sql, [id], function(err) {
-        if(err) return reject(err);
-        resolve();
-      })
-    })
+  softDelete: async (id: number): Promise<number> => {
+    const filas = await db('usuarios')
+      .where('id', id)
+      .andWhere('activo', 1)
+      .update({activo: 0});
+    
+    return filas;
   },
 
   // Mostrar nuevamente un usuario ocultado
-  showUser: async (id: number): Promise<void> => {
-    return new Promise((resolve, reject) => {
-      const sql = "UPDATE usuarios SET activo = 1 WHERE id = ? AND activo = 0";
+  showUser: async (id: number): Promise<number> => {
+    const filas = await db('usuarios')
+      .where('id', id)
+      .andWhere('activo', 0)
+      .update({activo: 1});
 
-      db.run(sql, [id], function(err) {
-        if(err) return reject(err);
-        resolve();
-      })
-    })
+    return filas;
   },
   
   // Eliminar un usuario por el ID
-  delete: async (id: number): Promise<void> => {
-    return new Promise((resolve, reject) => {
-      const sql = "DELETE FROM usuarios WHERE id = ?";
-
-      db.run(sql, [id], function(err) {
-        if(err) return reject(err);
-        resolve();
-      })
-    })
+  delete: async (id: number): Promise<number> => {
+    const filas = await db('usuarios')
+      .where('id', id)
+      .delete();
+    
+    return filas;
   }
 }
 

@@ -104,7 +104,7 @@ export const ocultarProducto = async (req: Request, res: Response, next: NextFun
         nombre: productoOcultado.nombre,
         precio: productoOcultado.precio,
         stock: productoOcultado.stock,
-        categoria_id: productoOcultado.categoria_id,
+        categoria_id: productoOcultado.id_categoria,
       }
     })
   } catch (err: any) {
