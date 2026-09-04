@@ -1,9 +1,9 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import UsuarioModel from "../models/usuario.model.js";
-import { User, UserPayload } from "../types/user.js";
+import { UserPayload, Users } from "../types/user.js";
 import { updateEmailSchema, updatePasswordSchema } from "../schemas/user.schema.js";
-import { email, ZodError } from "zod";
+import { ZodError } from "zod";
 import { AppError } from "../utils/AppError.js";
 
 const UsuarioServices = {
@@ -32,11 +32,11 @@ const UsuarioServices = {
   },
 
   // Registrar un nuevo usuario:
-  registrarUsuario: async (datos: User) => {
-    const {username, password, nombre, apellido, email, telefono, rol} = datos;
+  registrarUsuario: async (datos: Users) => {
+    const {password_hash, nombre, apellido, email, telefono, rol} = datos;
 
     // Validar que no falten campos obligatorios
-    if(!username || !password || !nombre || !apellido || !email || !telefono) {
+    if(!password_hash || !nombre || !apellido || !email || !telefono) {
       throw new AppError("Todos los datos son obligatorios.", 400);
     }
 
@@ -48,44 +48,45 @@ const UsuarioServices = {
     const phoneRegex = /^[0-9]{7,15}$/;
     if (!phoneRegex.test(telefono)) throw new AppError("Formato del numero celular.", 400);
 
-    // Validacion si ya existe el nombre del usuario
-    const usuarioExistente = await UsuarioModel.getByUsername(username);
-    if(usuarioExistente) throw new AppError("El nombre de usuario ya existe.", 400);
-
     // Validacion si ya existe el email
     const emailExistente = await UsuarioModel.getByEmail(email);
     if (emailExistente) throw new AppError("El email del usuario ya existe.", 400);
 
     // Encriptar la contraseña antes de enviarla
     const saltRounds = 10;
-    const hashedPassword = await bcrypt.hash(password, saltRounds);
+    const hashedPassword = await bcrypt.hash(password_hash, saltRounds);
 
-    const resultado = await UsuarioModel.create({
-      ...datos,
-      password: hashedPassword,
+    const datosVerificados: Omit<Users, 'id' | 'activo' | 'fecha_creacion'> = {
+      nombre,
+      apellido,
+      password_hash: hashedPassword,
+      email,
+      telefono,
       rol: rol || 'vendedor'
-    })
+    }
+
+    const resultado = await UsuarioModel.create(datosVerificados)
 
     // Retornar la informacion del usuario creado
     return {
       id: resultado.id,
-      username, 
+      nombre: resultado.nombre, 
       rol: rol || 'vendedor'
     }
   },
 
   // Iniciar sesion:
-  loginUsuario: async (datos: User) => {
-    const {username, password} = datos;
+  loginUsuario: async (datos: Users) => {
+    const {nombre, password_hash, email} = datos;
 
-    if(!username || !password) throw new AppError("Username y password obligatorios.", 400);
+    if(!nombre || !password_hash) throw new AppError("nombre y password obligatorios.", 400);
 
     // Buscamos si el usuario existe
-    const usuario = await UsuarioModel.getByUsername(username);
-    if(!usuario) throw new AppError("Credenciales incorrectas del usuario.", 400);
+    const usuario = await UsuarioModel.getByEmail(email);
+    if(!usuario) throw new AppError("Credenciales incorrectas del email.", 400);
 
     // Comparar las contraseñas enviada con el hash
-    const coincide = await bcrypt.compare(password, usuario.password);
+    const coincide = await bcrypt.compare(password_hash, usuario.password_hash);
     if(!coincide) throw new AppError("Credenciales incorrectas del password.", 400);
 
     // Generar el Token JWT
@@ -93,7 +94,7 @@ const UsuarioServices = {
     const token = jwt.sign(
       {
         id: usuario.id,
-        username: usuario.username,
+        username: usuario.nombre,
         rol: usuario.rol
       },
       secret,
@@ -104,7 +105,7 @@ const UsuarioServices = {
     return {
       usuario: {
         id: usuario.id,
-        username: usuario.username,
+        username: usuario.nombre,
         rol: usuario.rol
       },
       token
@@ -114,7 +115,7 @@ const UsuarioServices = {
   // Actualizar informacion basica
   actualizarDatos: async (
     id: string[] | string | undefined, 
-    datosUpdate: User,
+    datosUpdate: Users,
     userLogueado?: UserPayload
   ) => {
     if(!userLogueado) throw new AppError("No has iniciado sesión.", 401);
@@ -137,7 +138,6 @@ const UsuarioServices = {
       
      // Construir objeto con datos válidos
     const datosModelo = {
-      username: datosUpdate.username || userExiste.username,
       nombre: datosUpdate.nombre || userExiste.nombre,
       apellido: datosUpdate.apellido || userExiste.apellido,
       telefono: datosUpdate.telefono || userExiste.telefono,
@@ -149,7 +149,7 @@ const UsuarioServices = {
 
   actualizarParcial: async (
     id: string[] | string | undefined,
-    datosUpdate: Partial<User>,
+    datosUpdate: Partial<Users>,
     userLogueado?: UserPayload
   ) => {
     if(!userLogueado) throw new AppError("No has iniciado sesión.", 401);
@@ -166,7 +166,7 @@ const UsuarioServices = {
     }
 
     // Eliminamos password y email por si el cliente los envió por error
-    delete datosUpdate.password;
+    delete datosUpdate.password_hash;
     delete datosUpdate.email;
 
     const userExiste = await UsuarioModel.getById(idNum);
@@ -212,7 +212,7 @@ const UsuarioServices = {
     if(!usuario) throw new AppError("Usuario no encontrado", 404);
 
     // Comparar la contraseña antigua enviada con el hash guardado
-    const coincide = await bcrypt.compare(passwords.oldPassword, usuario.password);
+    const coincide = await bcrypt.compare(passwords.oldPassword, usuario.password_hash);
     if(!coincide) throw new AppError("La contraseña actual es incorrecta.", 401);
 
     const saltRounds = 10;
