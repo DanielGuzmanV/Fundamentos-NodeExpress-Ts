@@ -75,3 +75,15 @@ model Venta {
 
   @@map("ventas")
 }
+
+// Tabla de proveedor:
+model Proveedor {
+  id        Int @id @default(autoincrement())
+  nombre    String
+  telefeno  String?
+  direccion String?
+  activo    Int @default(1)
+  creadoEn  DateTime @default(now())
+
+  @@map("proveedores")
+}
